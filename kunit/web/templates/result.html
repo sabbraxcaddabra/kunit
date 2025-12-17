@@ -38,11 +38,42 @@
         <pre>{{ preview.before_snippet }}</pre>
       </div>
       <div>
-        <h3>После</h3>
+        <h3>После (фрагмент)</h3>
         <pre>{{ preview.after_snippet }}</pre>
       </div>
     </div>
 
+    <h3>Полный результат</h3>
+    <p>
+      <button id="copy-btn" type="button">Скопировать в буфер</button>
+    </p>
+    <textarea id="converted-output" readonly style="width:100%;height:320px;font-family:ui-monospace,monospace;">{{ converted_text }}</textarea>
+
     <p><a href="/">← Назад</a></p>
+    <script>
+      (function(){
+        const btn = document.getElementById('copy-btn');
+        const ta = document.getElementById('converted-output');
+        function copyText(text){
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(text);
+          }
+          // Fallback for older browsers
+          ta.select();
+          document.execCommand('copy');
+          return Promise.resolve();
+        }
+        btn?.addEventListener('click', async () => {
+          try {
+            await copyText(ta.value);
+            btn.textContent = 'Скопировано!';
+            setTimeout(() => btn.textContent = 'Скопировать в буфер', 1500);
+          } catch (e) {
+            btn.textContent = 'Не удалось скопировать';
+            setTimeout(() => btn.textContent = 'Скопировать в буфер', 2000);
+          }
+        });
+      })();
+    </script>
   </body>
   </html>

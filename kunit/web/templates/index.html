@@ -22,7 +22,7 @@
       <div class="error">{{ error_msg }}</div>
     {% endif %}
 
-    <form method="post" action="/convert" enctype="multipart/form-data">
+    <form id="convert-form" method="post" action="/convert" enctype="multipart/form-data">
       <div class="grid">
         <div>
           <div class="row">
@@ -72,6 +72,68 @@
         <button type="submit">Конвертировать</button>
       </div>
     </form>
+    <script>
+      (function () {
+        const STORAGE_KEY = 'kunit_form_state_v1';
+        const form = document.getElementById('convert-form');
+        const selSrc = form.querySelector('select[name="src"]');
+        const selDst = form.querySelector('select[name="dst"]');
+        const outName = document.getElementById('out_name');
+        const txt = document.getElementById('text_input');
+        const fileInput = document.getElementById('file_input');
+
+        function getSelectedModels() {
+          return Array.from(form.querySelectorAll('input[name="models"]'))
+            .filter(cb => cb.checked)
+            .map(cb => cb.value);
+        }
+
+        function setSelectedModels(values) {
+          const set = new Set(values || []);
+          const boxes = Array.from(form.querySelectorAll('input[name="models"]'));
+          // First, uncheck all; then check those in the saved set
+          boxes.forEach(cb => { cb.checked = false; });
+          boxes.forEach(cb => { if (set.has(cb.value)) cb.checked = true; });
+        }
+
+        function saveState() {
+          const state = {
+            src: selSrc?.value || null,
+            dst: selDst?.value || null,
+            out_name: outName?.value || null,
+            text_input: txt?.value || '',
+            models: getSelectedModels(),
+            // Note: browsers do not allow restoring file inputs for security
+          };
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+        }
+
+        function restoreState() {
+          let raw;
+          try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
+          if (!raw) return;
+          let state;
+          try { state = JSON.parse(raw); } catch (e) { return; }
+          if (state && typeof state === 'object') {
+            if (state.src && selSrc && Array.from(selSrc.options).some(o => o.value === state.src)) selSrc.value = state.src;
+            if (state.dst && selDst && Array.from(selDst.options).some(o => o.value === state.dst)) selDst.value = state.dst;
+            if (typeof state.out_name === 'string' && outName) outName.value = state.out_name;
+            if (typeof state.text_input === 'string' && txt) txt.value = state.text_input;
+            if (Array.isArray(state.models)) setSelectedModels(state.models);
+          }
+        }
+
+        // Hook events
+        document.addEventListener('DOMContentLoaded', restoreState, { once: true });
+        ['change', 'input'].forEach(ev => {
+          form.addEventListener(ev, (e) => {
+            // Skip saving content when a file is chosen; other fields still saved
+            if (e && e.target === fileInput) { saveState(); return; }
+            saveState();
+          });
+        });
+        form.addEventListener('submit', saveState);
+      })();
+    </script>
   </body>
   </html>
-

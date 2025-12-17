@@ -93,6 +93,7 @@ def create_app() -> Flask:
             out_name=out_name,
             preview=prev,
             payload=text,
+            converted_text=converted,
         )
 
     @app.post("/download")
@@ -121,4 +122,3 @@ def create_app() -> Flask:
 
 
 app = create_app()
-
