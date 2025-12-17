@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>kunit — Конвертер единиц LS-DYNA</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .row { margin-bottom: 1rem; }
+      textarea { width: 100%; height: 240px; font-family: ui-monospace, monospace; }
+      .error { color: #b00020; margin-bottom: 1rem; }
+      fieldset { border: 1px solid #ddd; padding: .75rem; }
+      legend { padding: 0 .5rem; }
+      .actions { margin-top: 1rem; }
+    </style>
+  </head>
+  <body>
+    <h1>kunit — Конвертер единиц LS‑DYNA</h1>
+
+    {% if error_msg %}
+      <div class="error">{{ error_msg }}</div>
+    {% endif %}
+
+    <form method="post" action="/convert" enctype="multipart/form-data">
+      <div class="grid">
+        <div>
+          <div class="row">
+            <label for="file_input">Файл (.k):</label>
+            <input type="file" id="file_input" name="file_input" accept=".k,text/plain">
+          </div>
+          <div class="row">
+            <label for="text_input">Или вставьте текст:</label>
+            <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..."></textarea>
+          </div>
+        </div>
+        <div>
+          <div class="row">
+            <label>Система единиц:</label>
+            <div>
+              <select name="src">
+                {% for u in units %}
+                <option value="{{ u }}">{{ u }}</option>
+                {% endfor %}
+              </select>
+              →
+              <select name="dst">
+                {% for u in units %}
+                <option value="{{ u }}" {% if loop.index0 == (units|length - 1) %}selected{% endif %}>{{ u }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="row">
+            <fieldset>
+              <legend>Модели (все по умолчанию)</legend>
+              {% for m in models %}
+              <label>
+                <input type="checkbox" name="models" value="{{ m }}" checked> {{ m }}
+              </label><br>
+              {% endfor %}
+            </fieldset>
+          </div>
+          <div class="row">
+            <label for="out_name">Имя файла результата:</label>
+            <input type="text" id="out_name" name="out_name" value="converted.k">
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="submit">Конвертировать</button>
+      </div>
+    </form>
+  </body>
+  </html>
+

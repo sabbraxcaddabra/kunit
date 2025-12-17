@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Результат — kunit</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      pre { background: #fafafa; padding: 1rem; border: 1px solid #eee; overflow: auto; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      .meta { margin-bottom: 1rem; }
+      .muted { color: #666; }
+    </style>
+  </head>
+  <body>
+    <h1>Результат</h1>
+
+    <div class="meta">
+      <div>Единицы: <strong>{{ src }}</strong> → <strong>{{ dst }}</strong></div>
+      <div>Модели: <strong>{{ ", ".join(models) }}</strong></div>
+      <div>Изменённых строк: <strong>{{ preview.changed_lines }}</strong></div>
+      <form method="post" action="/download">
+        <input type="hidden" name="src" value="{{ src }}">
+        <input type="hidden" name="dst" value="{{ dst }}">
+        <input type="hidden" name="out_name" value="{{ out_name }}">
+        {% for m in models %}
+          <input type="hidden" name="models" value="{{ m }}">
+        {% endfor %}
+        <textarea name="payload" style="display:none;">{{ payload }}</textarea>
+        <button type="submit">Скачать {{ out_name }}</button>
+      </form>
+      <p class="muted">Скачивание формирует файл заново из исходного текста.</p>
+    </div>
+
+    <div class="grid">
+      <div>
+        <h3>До</h3>
+        <pre>{{ preview.before_snippet }}</pre>
+      </div>
+      <div>
+        <h3>После</h3>
+        <pre>{{ preview.after_snippet }}</pre>
+      </div>
+    </div>
+
+    <p><a href="/">← Назад</a></p>
+  </body>
+  </html>
