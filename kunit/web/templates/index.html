@@ -1,77 +1,98 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" class="h-full">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>kunit — Конвертер единиц LS-DYNA</title>
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 2rem; }
-      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-      .row { margin-bottom: 1rem; }
-      textarea { width: 100%; height: 240px; font-family: ui-monospace, monospace; }
-      .error { color: #b00020; margin-bottom: 1rem; }
-      fieldset { border: 1px solid #ddd; padding: .75rem; }
-      legend { padding: 0 .5rem; }
-      .actions { margin-top: 1rem; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h1>kunit — Конвертер единиц LS‑DYNA</h1>
-
-    {% if error_msg %}
-      <div class="error">{{ error_msg }}</div>
-    {% endif %}
-
-    <form id="convert-form" method="post" action="/convert" enctype="multipart/form-data">
-      <div class="grid">
+  <body class="min-h-full bg-slate-50 text-slate-900">
+    <div class="max-w-6xl mx-auto px-4 py-10">
+      <header class="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div>
-          <div class="row">
-            <label for="file_input">Файл (.k):</label>
-            <input type="file" id="file_input" name="file_input" accept=".k,text/plain">
-          </div>
-          <div class="row">
-            <label for="text_input">Или вставьте текст:</label>
-            <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..."></textarea>
-          </div>
+          <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">LS-DYNA</p>
+          <h1 class="text-3xl font-semibold leading-tight">kunit — конвертер единиц</h1>
+          <p class="text-slate-600">Преобразуйте модели между системами единиц, сохраняя фиксированную ширину.</p>
         </div>
-        <div>
-          <div class="row">
-            <label>Система единиц:</label>
-            <div>
-              <select name="src">
-                {% for u in units %}
-                <option value="{{ u }}">{{ u }}</option>
-                {% endfor %}
-              </select>
-              →
-              <select name="dst">
-                {% for u in units %}
-                <option value="{{ u }}" {% if loop.index0 == (units|length - 1) %}selected{% endif %}>{{ u }}</option>
-                {% endfor %}
-              </select>
+        <div class="flex items-center gap-2 text-sm text-slate-600">
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow border border-slate-200">Tailwind UI</span>
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow border border-slate-200">JSON/TOML материалы</span>
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white shadow border border-slate-200">Кастомные формулы</span>
+        </div>
+      </header>
+
+      {% if error_msg %}
+        <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-900 px-4 py-3 mb-6">
+          {{ error_msg }}
+        </div>
+      {% endif %}
+
+      <form id="convert-form" method="post" action="/convert" enctype="multipart/form-data" class="space-y-6">
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="space-y-2">
+              <label for="file_input" class="block text-sm font-medium text-slate-700">Файл (.k)</label>
+              <input type="file" id="file_input" name="file_input" accept=".k,text/plain" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
+              <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
+            </div>
+            <div class="space-y-2">
+              <label for="text_input" class="block text-sm font-medium text-slate-700">Или вставьте текст</label>
+              <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..." class="w-full h-56 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
+            </div>
+            <div class="space-y-2">
+              <label for="custom_transforms" class="block text-sm font-medium text-slate-700">Кастомные преобразования (JSON)</label>
+              <textarea id="custom_transforms" name="custom_transforms" placeholder='{"mat-jc": {"pr": {"power": 1.2}}}' class="w-full h-32 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm">{{ custom_transforms }}</textarea>
+              <p class="text-xs text-slate-500">Например: параметр давления в степени y — {"mat-jc": {"pr": {"power": y}}}. Поддерживаются multiplier, offset и dim [M, L, T].</p>
             </div>
           </div>
-          <div class="row">
-            <fieldset>
-              <legend>Модели (все по умолчанию)</legend>
-              {% for m in models %}
-              <label>
-                <input type="checkbox" name="models" value="{{ m }}" checked> {{ m }}
-              </label><br>
-              {% endfor %}
-            </fieldset>
-          </div>
-          <div class="row">
-            <label for="out_name">Имя файла результата:</label>
-            <input type="text" id="out_name" name="out_name" value="converted.k">
+
+          <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="grid md:grid-cols-[1fr_auto_1fr] items-end gap-3">
+              <div>
+                <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
+                <select name="src" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                  {% for u in units %}
+                  <option value="{{ u }}">{{ u }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="text-center text-slate-500 pb-2">→</div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
+                <select name="dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                  {% for u in units %}
+                  <option value="{{ u }}" {% if loop.index0 == (units|length - 1) %}selected{% endif %}>{{ u }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <p class="block text-sm font-medium text-slate-700 mb-2">Модели</p>
+              <div class="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+                {% for m in models %}
+                <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50/80 hover:border-sky-300">
+                  <input type="checkbox" name="models" value="{{ m }}" checked class="h-4 w-4 text-sky-600 border-slate-300 rounded" />
+                  <span class="text-sm text-slate-800">{{ m }}</span>
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <label for="out_name" class="block text-sm font-medium text-slate-700">Имя файла результата</label>
+              <input type="text" id="out_name" name="out_name" value="converted.k" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
+            </div>
+
+            <div class="flex items-center gap-3 pt-2">
+              <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Конвертировать</button>
+              <p class="text-xs text-slate-500">Состояние формы сохраняется локально.</p>
+            </div>
           </div>
         </div>
-      </div>
+      </form>
+    </div>
 
-      <div class="actions">
-        <button type="submit">Конвертировать</button>
-      </div>
-    </form>
     <script>
       (function () {
         const STORAGE_KEY = 'kunit_form_state_v1';
@@ -80,6 +101,7 @@
         const selDst = form.querySelector('select[name="dst"]');
         const outName = document.getElementById('out_name');
         const txt = document.getElementById('text_input');
+        const customTransforms = document.getElementById('custom_transforms');
         const fileInput = document.getElementById('file_input');
 
         function getSelectedModels() {
@@ -91,7 +113,6 @@
         function setSelectedModels(values) {
           const set = new Set(values || []);
           const boxes = Array.from(form.querySelectorAll('input[name="models"]'));
-          // First, uncheck all; then check those in the saved set
           boxes.forEach(cb => { cb.checked = false; });
           boxes.forEach(cb => { if (set.has(cb.value)) cb.checked = true; });
         }
@@ -102,8 +123,8 @@
             dst: selDst?.value || null,
             out_name: outName?.value || null,
             text_input: txt?.value || '',
+            custom_transforms: customTransforms?.value || '',
             models: getSelectedModels(),
-            // Note: browsers do not allow restoring file inputs for security
           };
           try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
         }
@@ -119,15 +140,14 @@
             if (state.dst && selDst && Array.from(selDst.options).some(o => o.value === state.dst)) selDst.value = state.dst;
             if (typeof state.out_name === 'string' && outName) outName.value = state.out_name;
             if (typeof state.text_input === 'string' && txt) txt.value = state.text_input;
+            if (typeof state.custom_transforms === 'string' && customTransforms) customTransforms.value = state.custom_transforms;
             if (Array.isArray(state.models)) setSelectedModels(state.models);
           }
         }
 
-        // Hook events
         document.addEventListener('DOMContentLoaded', restoreState, { once: true });
         ['change', 'input'].forEach(ev => {
           form.addEventListener(ev, (e) => {
-            // Skip saving content when a file is chosen; other fields still saved
             if (e && e.target === fileInput) { saveState(); return; }
             saveState();
           });
@@ -136,4 +156,4 @@
       })();
     </script>
   </body>
-  </html>
+</html>

@@ -41,6 +41,7 @@ def create_app() -> Flask:
             units=units,
             models=models,
             default_models=models,
+            custom_transforms="",
         )
 
     @app.post("/convert")
@@ -52,6 +53,7 @@ def create_app() -> Flask:
         dst = request.form.get("dst", type=str)
         out_name = (request.form.get("out_name", type=str) or "converted.k").strip()
         selected_models = request.form.getlist("models") or models_all
+        custom_transforms = request.form.get("custom_transforms", type=str) or ""
 
         # prefer pasted text over uploaded file if present
         pasted_text = request.form.get("text_input", type=str) or ""
@@ -73,7 +75,13 @@ def create_app() -> Flask:
             ), 400
 
         try:
-            converted = convert_string(text, src=src, dst=dst, models=selected_models)
+            converted = convert_string(
+                text,
+                src=src,
+                dst=dst,
+                models=selected_models,
+                custom_transforms=custom_transforms or None,
+            )
         except Exception as e:
             return render_template(
                 "index.html",
@@ -81,6 +89,7 @@ def create_app() -> Flask:
                 models=models_all,
                 default_models=models_all,
                 error_msg=f"Ошибка конвертации: {e}",
+                custom_transforms=custom_transforms,
             ), 400
 
         prev = build_preview(text, converted)
@@ -94,6 +103,7 @@ def create_app() -> Flask:
             preview=prev,
             payload=text,
             converted_text=converted,
+            custom_transforms=custom_transforms,
         )
 
     @app.post("/download")

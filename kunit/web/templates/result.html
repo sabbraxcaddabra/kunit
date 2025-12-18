@@ -1,79 +1,116 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" class="h-full">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Результат — kunit</title>
-    <style>
-      body { font-family: system-ui, sans-serif; margin: 2rem; }
-      pre { background: #fafafa; padding: 1rem; border: 1px solid #eee; overflow: auto; }
-      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-      .meta { margin-bottom: 1rem; }
-      .muted { color: #666; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body>
-    <h1>Результат</h1>
+  <body class="min-h-full bg-slate-50 text-slate-900">
+    <div class="max-w-6xl mx-auto px-4 py-10 space-y-6">
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">Результат конвертации</p>
+          <h1 class="text-3xl font-semibold leading-tight">{{ out_name }}</h1>
+          <p class="text-slate-600">{{ src }} → {{ dst }} · {{ ", ".join(models) }}</p>
+        </div>
+        <form method="post" action="/download" class="flex items-center gap-3">
+          <input type="hidden" name="src" value="{{ src }}">
+          <input type="hidden" name="dst" value="{{ dst }}">
+          <input type="hidden" name="out_name" value="{{ out_name }}">
+          {% for m in models %}
+            <input type="hidden" name="models" value="{{ m }}">
+          {% endfor %}
+          <textarea name="payload" class="hidden">{{ payload }}</textarea>
+          <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скачать файл</button>
+        </form>
+      </div>
 
-    <div class="meta">
-      <div>Единицы: <strong>{{ src }}</strong> → <strong>{{ dst }}</strong></div>
-      <div>Модели: <strong>{{ ", ".join(models) }}</strong></div>
-      <div>Изменённых строк: <strong>{{ preview.changed_lines }}</strong></div>
-      <form method="post" action="/download">
-        <input type="hidden" name="src" value="{{ src }}">
-        <input type="hidden" name="dst" value="{{ dst }}">
-        <input type="hidden" name="out_name" value="{{ out_name }}">
-        {% for m in models %}
-          <input type="hidden" name="models" value="{{ m }}">
-        {% endfor %}
-        <textarea name="payload" style="display:none;">{{ payload }}</textarea>
-        <button type="submit">Скачать {{ out_name }}</button>
-      </form>
-      <p class="muted">Скачивание формирует файл заново из исходного текста.</p>
+      <div class="grid md:grid-cols-3 gap-4">
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
+          <p class="text-sm text-slate-500">Изменённых строк</p>
+          <p class="text-2xl font-semibold">{{ preview.changed_lines }}</p>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:col-span-2">
+          <p class="text-sm text-slate-500 mb-2">Кратко</p>
+          <div class="grid sm:grid-cols-2 gap-3 text-sm text-slate-700">
+            <div><span class="text-slate-500">Модели:</span> {{ ", ".join(models) }}</div>
+            <div><span class="text-slate-500">Файл:</span> {{ out_name }}</div>
+            <div class="md:col-span-2 text-slate-500">Скачивание формирует файл заново из исходного текста.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold">До</h3>
+            <span class="text-xs text-slate-500">Первые строки</span>
+          </div>
+          <pre class="bg-slate-50 rounded-xl border border-slate-100 text-sm p-3 overflow-auto">{{ preview.before_snippet }}</pre>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
+          <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-semibold">После</h3>
+            <span class="text-xs text-slate-500">Первые строки</span>
+          </div>
+          <pre class="bg-slate-50 rounded-xl border border-slate-100 text-sm p-3 overflow-auto">{{ preview.after_snippet }}</pre>
+        </div>
+      </div>
+
+      <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-lg font-semibold">Полный результат</h3>
+            <p class="text-sm text-slate-500">Копирование — иконка внутри поля.</p>
+          </div>
+          <a href="/" class="text-sm text-sky-700 hover:text-sky-900">← Вернуться</a>
+        </div>
+        <div class="relative">
+          <textarea id="converted-output" readonly class="w-full h-80 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 font-mono text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400">{{ converted_text }}</textarea>
+          <button id="copy-btn" type="button" class="group absolute top-3 right-3 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" aria-label="Скопировать результат">
+            <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 text-slate-600 group-hover:text-sky-700" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            <span id="copy-label" class="ml-2 text-xs font-medium text-slate-600 hidden sm:inline">Скопировать</span>
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="grid">
-      <div>
-        <h3>До</h3>
-        <pre>{{ preview.before_snippet }}</pre>
-      </div>
-      <div>
-        <h3>После (фрагмент)</h3>
-        <pre>{{ preview.after_snippet }}</pre>
-      </div>
-    </div>
-
-    <h3>Полный результат</h3>
-    <p>
-      <button id="copy-btn" type="button">Скопировать в буфер</button>
-    </p>
-    <textarea id="converted-output" readonly style="width:100%;height:320px;font-family:ui-monospace,monospace;">{{ converted_text }}</textarea>
-
-    <p><a href="/">← Назад</a></p>
     <script>
       (function(){
         const btn = document.getElementById('copy-btn');
         const ta = document.getElementById('converted-output');
-        function copyText(text){
+        const label = document.getElementById('copy-label');
+        const icon = document.getElementById('copy-icon');
+
+        async function copyText(text){
           if (navigator.clipboard && navigator.clipboard.writeText) {
             return navigator.clipboard.writeText(text);
           }
-          // Fallback for older browsers
           ta.select();
           document.execCommand('copy');
           return Promise.resolve();
         }
+
+        function setState(text, success = true) {
+          if (label) label.textContent = text;
+          icon.classList.toggle('text-emerald-600', success);
+          icon.classList.toggle('text-rose-600', !success);
+          setTimeout(() => {
+            if (label) label.textContent = 'Скопировать';
+            icon.classList.remove('text-emerald-600', 'text-rose-600');
+          }, 1600);
+        }
+
         btn?.addEventListener('click', async () => {
           try {
             await copyText(ta.value);
-            btn.textContent = 'Скопировано!';
-            setTimeout(() => btn.textContent = 'Скопировать в буфер', 1500);
+            setState('Скопировано', true);
           } catch (e) {
-            btn.textContent = 'Не удалось скопировать';
-            setTimeout(() => btn.textContent = 'Скопировать в буфер', 2000);
+            setState('Ошибка копирования', false);
           }
         });
       })();
     </script>
   </body>
-  </html>
+</html>
