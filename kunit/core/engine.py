@@ -8,18 +8,6 @@ from .units import BaseUnits, DIM, scale_factor
 
 
 @dataclass(frozen=True)
-class KeywordSpec:
-    """
-    Specification of a keyword block with fixed-width numeric cards.
-    """
-
-    name: str  # internal name, e.g. "mat-jc"
-    keyword_prefix: str  # match by startswith (upper), e.g. "*MAT_JOHNSON_COOK"
-    cards: Sequence[Sequence[str]]  # list of 8-field card layouts
-    dims: Dict[str, Optional[DIM]]  # dimensions for fields; None => do not convert
-
-
-@dataclass(frozen=True)
 class FieldTransform:
     """User-provided transformation applied after unit scaling."""
 
@@ -49,6 +37,19 @@ class FieldTransform:
 
     def apply(self, value: float) -> float:
         return (value**self.power) * self.multiplier + self.offset
+
+
+@dataclass(frozen=True)
+class KeywordSpec:
+    """
+    Specification of a keyword block with fixed-width numeric cards.
+    """
+
+    name: str  # internal name, e.g. "mat-jc"
+    keyword_prefix: str  # match by startswith (upper), e.g. "*MAT_JOHNSON_COOK"
+    cards: Sequence[Sequence[str]]  # list of 8-field card layouts
+    dims: Dict[str, Optional[DIM]]  # dimensions for fields; None => do not convert
+    transforms: Mapping[str, FieldTransform] | None = None  # built-in transforms
 
 
 def _is_data_line(line: str) -> bool:
@@ -103,6 +104,8 @@ def _convert_field(
             scale_dim = dim
         if scale_dim is not None:
             value *= scale_factor(src, dst, scale_dim) ** transform.scale_exponent(ctx)
+        if dim is not None and (scale_dim is None or scale_dim != dim):
+            value *= scale_factor(src, dst, dim)
     elif dim is not None:
         value *= scale_factor(src, dst, dim)
     if transform:
@@ -125,9 +128,9 @@ def convert_block(
     if len(data_idxs) < len(spec.cards):
         return out  # unexpected structure => leave block unchanged
 
-    spec_transforms: Mapping[str, FieldTransform] = (
-        custom_transforms.get(spec.name, {}) if custom_transforms else {}
-    )
+    spec_transforms: Dict[str, FieldTransform] = dict(spec.transforms or {})
+    if custom_transforms and spec.name in custom_transforms:
+        spec_transforms.update(custom_transforms[spec.name])
 
     context: Dict[str, float] = {}
     for line_i, card_fields in zip(data_idxs, spec.cards):
