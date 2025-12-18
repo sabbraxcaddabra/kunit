@@ -20,7 +20,10 @@ def cli() -> None:
 @click.option(
     "--models",
     default="all",
-    help="Comma-separated list: mat-jc,eos-gruneisen,eos-jwl,mat-he-burn or 'all'.",
+    help=(
+        "Comma-separated list: mat-jc,eos-gruneisen,eos-ignition-growth,"
+        "eos-jwl,mat-he-burn or 'all'."
+    ),
 )
 @click.option("-o", "--output", type=click.Path(dir_okay=False, path_type=Path))
 def convert_cmd(
