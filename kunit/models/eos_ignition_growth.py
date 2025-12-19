@@ -31,13 +31,17 @@ DIMS = {
 }
 
 TRANSFORMS = {
-    # Pressure^ES1 / time
+    # 1 / (Pressure^EM * time)
     "grow1": FieldTransform(
-        dim=(0, 0, -1), scale_dim=(1, -1, -2), scale_power_field="es1"
+        dim=(0, 0, -1),  # base 1/time
+        scale_dim=(-1, 1, 2),  # inverse of pressure dim (1,-1,-2)
+        scale_power_field="em",
     ),
-    # Pressure^ES2 / time
+    # 1 / (Pressure^EN * time)
     "grow2": FieldTransform(
-        dim=(0, 0, -1), scale_dim=(1, -1, -2), scale_power_field="es2"
+        dim=(0, 0, -1),
+        scale_dim=(-1, 1, 2),
+        scale_power_field="en",
     ),
 }
 

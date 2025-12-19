@@ -41,7 +41,8 @@ def test_ignition_growth_unit_scaling_from_reference_card():
     assert float(card2[4]) == pytest.approx(0.022 * pressure_scale)  # FMXIG (pressure)
     assert float(card2[5]) == pytest.approx(4.0e6 * time_scale)  # FREQ (1/time)
 
-    grow1_pressure_scale = pressure_scale ** 0.222
+    # grow1 has dim 1/(P^EM * t); EM=2
+    grow1_pressure_scale = (scale_factor(src, dst, (-1, 1, 2))) ** 2
     assert float(card2[6]) == pytest.approx(
         850 * time_scale * grow1_pressure_scale, rel=1e-5
     )
@@ -51,7 +52,8 @@ def test_ignition_growth_unit_scaling_from_reference_card():
     assert float(card3[3]) == pytest.approx(2.49e-5 * pressure_scale)  # CVR (pressure)
 
     card4 = _fields(lines[4])
-    grow2_pressure_scale = pressure_scale ** 0.333
+    # grow2 has dim 1/(P^EN * t); EN=3
+    grow2_pressure_scale = (scale_factor(src, dst, (-1, 1, 2))) ** 3
     assert float(card4[0]) == pytest.approx(
         660 * time_scale * grow2_pressure_scale, rel=1e-5
     )

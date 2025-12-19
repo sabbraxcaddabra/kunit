@@ -21,7 +21,7 @@ def cli() -> None:
     "--models",
     default="all",
     help=(
-        "Comma-separated list: mat-jc,eos-gruneisen,eos-jwl,eos-jwlb,mat-he-burn or 'all'."
+        "Comma-separated list: mat-jc,eos-gruneisen,eos-jwl,eos-jwlb,mat-he-burn,eos-ignition-growth or 'all'."
     ),
 )
 @click.option("-o", "--output", type=click.Path(dir_okay=False, path_type=Path))
