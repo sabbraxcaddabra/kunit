@@ -1,7 +1,7 @@
 [project]
 name = "kunit"
 version = "0.1.0"
-description = "LS-DYNA unit converter with fixed-width awareness"
+description = "LS-DYNA unit converter for HE applications with fixed-width awareness"
 readme = "AGENTS.md"
 requires-python = ">=3.11"
 authors = [{ name = "kunit" }]
