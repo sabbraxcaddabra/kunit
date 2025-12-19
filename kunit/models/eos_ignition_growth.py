@@ -15,9 +15,8 @@ DIMS = {
     "b": (1, -1, -2),
     "r1": (1, -1, -2),
     "r2": (1, -1, -2),
-    "fmxig": (1, -1, -2),
-    "cvp": (1, -1, -2),
-    "cvr": (1, -1, -2),
+    "cvp": (0, 2, -2),
+    "cvr": (0, 2, -2),
     # specific heat (energy per mass)
     "g": (0, 2, -2),
     "r3": (0, 2, -2),
@@ -25,9 +24,6 @@ DIMS = {
     "freq": (0, 0, -1),
     "grow1": (0, 0, -1),
     "grow2": (0, 0, -1),
-    "fmxgr": (0, 0, -1),
-    "fmngr": (0, 0, -1),
-    # remaining fields are dimensionless
 }
 
 TRANSFORMS = {
