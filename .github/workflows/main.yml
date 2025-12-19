@@ -1,0 +1,33 @@
+name: Build container
+
+on:
+  push:
+    branches: ["main"]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: redhat-actions/podman-login@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}
+          podman build -t "$IMAGE:latest" -t "$IMAGE:${{ github.sha }}" .
+
+      - name: Push image
+        run: |
+          IMAGE=ghcr.io/${{ github.repository }}
+          podman push "$IMAGE:latest"
+          podman push "$IMAGE:${{ github.sha }}"
