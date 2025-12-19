@@ -16,7 +16,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv (Astral) — single static binary to ~/.local/bin/uv
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh -s -- -y
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Copy project metadata first to leverage layer caching
 COPY pyproject.toml ./
@@ -28,9 +28,10 @@ RUN uv sync --no-dev --frozen --no-install-project
 # Copy application source and config
 COPY kunit ./kunit
 COPY gunicorn.conf.py ./gunicorn.conf.py
+COPY AGENTS.md ./AGENTS.md
 
 # Install the project itself into the existing venv (uses lock file)
-RUN uv sync --frozen
+RUN uv sync --no-dev --frozen
 
 # Expose web port
 EXPOSE 8000
