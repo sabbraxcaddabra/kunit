@@ -2,15 +2,19 @@ from __future__ import annotations
 
 import io
 from dataclasses import dataclass
-from typing import Optional
+from pathlib import Path
+from typing import Optional, Sequence
 
 from flask import Flask, render_template, request, send_file
 
-from kunit.api import convert_string, get_unit_keys, list_models
+from kunit.api import convert_string, get_unit_descriptors, get_unit_keys, list_models
+from kunit.materials_store import MaterialRecord, MaterialStore
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    materials_root = Path(__file__).resolve().parent / "materials"
+    materials_store = MaterialStore(materials_root)
 
     @dataclass
     class Preview:
@@ -32,22 +36,30 @@ def create_app() -> Flask:
             after_snippet="\n".join(after_lines[:max_lines]),
         )
 
-    @app.get("/")
-    def index():
-        units = get_unit_keys()
+    def _index_context(**kwargs):
+        unit_options = get_unit_descriptors()
         models = list_models()
-        return render_template(
-            "index.html",
-            units=units,
+        materials = materials_store.list_materials()
+        unit_labels = {u.key: u.label for u in unit_options}
+        base_ctx = dict(
+            units=unit_options,
             models=models,
             default_models=models,
-            custom_transforms="",
+            unit_labels=unit_labels,
+            materials=materials,
         )
+        base_ctx.update(kwargs)
+        return base_ctx
+
+    @app.get("/")
+    def index():
+        return render_template("index.html", **_index_context(custom_transforms=""))
 
     @app.post("/convert")
     def convert():
-        units = get_unit_keys()
+        units = get_unit_descriptors()
         models_all = list_models()
+        unit_labels = {u.key: u.label for u in units}
 
         src = request.form.get("src", type=str)
         dst = request.form.get("dst", type=str)
@@ -66,13 +78,18 @@ def create_app() -> Flask:
 
         if not text:
             # render with error message
-            return render_template(
-                "index.html",
-                units=units,
-                models=models_all,
-                default_models=models_all,
-                error_msg="Нужно вставить текст или выбрать файл",
-            ), 400
+            return (
+                render_template(
+                    "index.html",
+                    **_index_context(
+                        error_msg="Нужно вставить текст или выбрать файл",
+                        selected_src=src,
+                        selected_dst=dst,
+                        custom_transforms=custom_transforms,
+                    ),
+                ),
+                400,
+            )
 
         try:
             converted = convert_string(
@@ -83,14 +100,18 @@ def create_app() -> Flask:
                 custom_transforms=custom_transforms or None,
             )
         except Exception as e:
-            return render_template(
-                "index.html",
-                units=units,
-                models=models_all,
-                default_models=models_all,
-                error_msg=f"Ошибка конвертации: {e}",
-                custom_transforms=custom_transforms,
-            ), 400
+            return (
+                render_template(
+                    "index.html",
+                    **_index_context(
+                        error_msg=f"Ошибка конвертации: {e}",
+                        selected_src=src,
+                        selected_dst=dst,
+                        custom_transforms=custom_transforms,
+                    ),
+                ),
+                400,
+            )
 
         prev = build_preview(text, converted)
 
@@ -103,7 +124,86 @@ def create_app() -> Flask:
             preview=prev,
             payload=text,
             converted_text=converted,
+            unit_labels=unit_labels,
             custom_transforms=custom_transforms,
+        )
+
+    def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
+        blocks = []
+        for record in records:
+            converted = convert_string(
+                record.payload,
+                src=record.units,
+                dst=dst_units,
+                models=[record.model],
+            )
+            blocks.append(converted if converted.endswith("\n") else f"{converted}\n")
+        return "".join(blocks)
+
+    @app.post("/materials/export")
+    def export_materials():
+        units = get_unit_descriptors()
+        unit_labels = {u.key: u.label for u in units}
+        materials = materials_store.list_materials()
+        selected_ids = set(request.form.getlist("materials"))
+        dst_units = request.form.get("materials_dst", type=str)
+        out_name = (request.form.get("materials_out_name", type=str) or "materials.k").strip()
+        selected = [m for m in materials if m.material_id in selected_ids]
+
+        if not selected:
+            return (
+                render_template(
+                    "index.html",
+                    **_index_context(
+                        materials_error="Нужно выбрать хотя бы один материал",
+                        selected_materials=selected_ids,
+                        materials_dst=dst_units,
+                        materials_out_name=out_name,
+                        custom_transforms="",
+                    ),
+                ),
+                400,
+            )
+
+        try:
+            payload = _convert_material_records(selected, dst_units or get_unit_keys()[0])
+        except Exception as e:
+            return (
+                render_template(
+                    "index.html",
+                    **_index_context(
+                        materials_error=f"Ошибка экспорта материалов: {e}",
+                        selected_materials=selected_ids,
+                        materials_dst=dst_units,
+                        materials_out_name=out_name,
+                        custom_transforms="",
+                    ),
+                ),
+                400,
+            )
+
+        return render_template(
+            "index.html",
+            **_index_context(
+                selected_materials=selected_ids,
+                materials_dst=dst_units,
+                materials_out_name=out_name,
+                materials_export=payload,
+                unit_labels=unit_labels,
+                custom_transforms="",
+            ),
+        )
+
+    @app.post("/materials/download")
+    def download_materials():
+        payload = request.form.get("payload", type=str) or ""
+        out_name = (request.form.get("materials_out_name", type=str) or "materials.k").strip()
+        buf = io.BytesIO(payload.encode("utf-8"))
+        return send_file(
+            buf,
+            mimetype="text/plain; charset=utf-8",
+            as_attachment=True,
+            download_name=out_name,
         )
 
     @app.post("/download")

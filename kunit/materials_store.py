@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, List, Mapping, Sequence
@@ -18,6 +17,8 @@ class MaterialRecord:
     model: str
     units: str
     payload: str
+    reference: str | None = None
+    comment: str | None = None
     tags: Sequence[str] = field(default_factory=list)
     meta: Mapping[str, Any] = field(default_factory=dict)
     source: str | None = None
@@ -30,12 +31,16 @@ class MaterialRecord:
 class MaterialStore:
     """Lightweight file-based store for materials.
 
-    Files are authored by developers/administrators locally in JSON or TOML, e.g.:
-    {
-      "materials": [
-        {"id": "steel-1", "name": "Steel #1", "model": "mat-jc", "units": "mm-mg-us", "payload": "*MAT..."}
-      ]
-    }
+    Files are authored by developers/administrators locally as TOML collections, e.g.:
+
+    [[materials]]
+    id = "steel-1"
+    name = "Steel #1"
+    model = "mat-jc"
+    units = "mm-mg-us"
+    text = """*MAT..."""
+    reference = "https://example.com/ref"
+    comment = "Short note about provenance"
     """
 
     def __init__(self, root: str | Path):
@@ -53,20 +58,13 @@ class MaterialStore:
     def _iter_material_files(self) -> Iterable[Path]:
         if not self.root.exists():
             return []
-        return sorted(
-            [
-                *self.root.glob("*.json"),
-                *self.root.glob("*.toml"),
-            ]
-        )
+        return sorted(self.root.glob("*.toml"))
 
     def _load_file(self, path: Path) -> List[MaterialRecord]:
-        if path.suffix.lower() == ".json":
-            data = json.loads(path.read_text(encoding="utf-8"))
-        elif path.suffix.lower() == ".toml":
-            data = tomllib.loads(path.read_text(encoding="utf-8"))
-        else:
+        if path.suffix.lower() != ".toml":
             return []
+
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
 
         materials = data.get("materials") if isinstance(data, Mapping) else None
         if not isinstance(materials, list):
@@ -96,6 +94,14 @@ class MaterialStore:
         material_id = str(raw.get("id") or raw.get("name") or source_path.stem)
 
         name = str(raw.get("name") or material_id).strip()
+        reference = raw.get("reference")
+        if reference is not None and not isinstance(reference, str):
+            raise ValueError(f"Reference for material '{material_id}' must be a string if provided")
+
+        comment = raw.get("comment")
+        if comment is not None and not isinstance(comment, str):
+            raise ValueError(f"Comment for material '{material_id}' must be a string if provided")
+
         tags = raw.get("tags") or []
         if not isinstance(tags, Sequence) or isinstance(tags, (str, bytes)):
             raise ValueError(f"Tags for material '{material_id}' must be a list of strings")
@@ -110,6 +116,8 @@ class MaterialStore:
             model=model,
             units=units,
             payload=payload,
+            reference=reference,
+            comment=comment,
             tags=list(tags),
             meta=meta,
             source=str(source_path),

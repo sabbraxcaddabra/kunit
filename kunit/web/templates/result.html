@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Результат — kunit</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      #diff-grid {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, var(--left, 50%)) minmax(0, var(--right, 50%));
+      }
+      #diff-grid.result-collapsed {
+        grid-template-columns: 1fr;
+      }
+      #diff-grid.result-collapsed #result-column {
+        display: none;
+      }
+    </style>
   </head>
   <body class="min-h-full bg-slate-50 text-slate-900">
     <div class="max-w-6xl mx-auto px-4 py-10 space-y-6">
@@ -12,7 +25,7 @@
         <div>
           <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">Результат конвертации</p>
           <h1 class="text-3xl font-semibold leading-tight">{{ out_name }}</h1>
-          <p class="text-slate-600">{{ src }} → {{ dst }} · {{ ", ".join(models) }}</p>
+          <p class="text-slate-600">{{ unit_labels.get(src, src) }} → {{ unit_labels.get(dst, dst) }} · {{ ", ".join(models) }}</p>
         </div>
         <form method="post" action="/download" class="flex items-center gap-3">
           <input type="hidden" name="src" value="{{ src }}">
@@ -41,73 +54,84 @@
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-6">
-        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-semibold">До</h3>
-            <span class="text-xs text-slate-500">Первые строки</span>
-          </div>
-          <pre class="bg-slate-50 rounded-xl border border-slate-100 text-sm p-3 overflow-auto">{{ preview.before_snippet }}</pre>
-        </div>
-        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
-          <div class="flex items-center justify-between mb-2">
-            <h3 class="text-lg font-semibold">После</h3>
-            <span class="text-xs text-slate-500">Первые строки</span>
-          </div>
-          <pre class="bg-slate-50 rounded-xl border border-slate-100 text-sm p-3 overflow-auto">{{ preview.after_snippet }}</pre>
-        </div>
-      </div>
-
-      <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
-        <div class="flex items-center justify-between mb-3">
+      <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 space-y-4">
+        <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h3 class="text-lg font-semibold">Полный результат</h3>
-            <p class="text-sm text-slate-500">Копирование — иконка внутри поля.</p>
+            <h3 class="text-lg font-semibold">Текст до/после</h3>
+            <p class="text-sm text-slate-500">Полный исходник слева, результат справа. Сдвигайте ползунок или скрывайте правую колонку.</p>
           </div>
-          <a href="/" class="text-sm text-sky-700 hover:text-sky-900">← Вернуться</a>
+          <div class="flex items-center gap-3 flex-wrap">
+            <label class="text-sm text-slate-600 flex items-center gap-2">
+              <span>Смещение</span>
+              <input id="split-slider" type="range" min="35" max="65" value="50" class="w-32 accent-sky-600" aria-label="Сдвиг результата">
+            </label>
+            <button id="toggle-result" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скрыть результат</button>
+          </div>
         </div>
-        <div class="relative">
-          <textarea id="converted-output" readonly class="w-full h-80 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 font-mono text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400">{{ converted_text }}</textarea>
-          <button id="copy-btn" type="button" class="group absolute top-3 right-3 inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" aria-label="Скопировать результат">
-            <svg id="copy-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 text-slate-600 group-hover:text-sky-700" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            <span id="copy-label" class="ml-2 text-xs font-medium text-slate-600 hidden sm:inline">Скопировать</span>
-          </button>
+
+        <div id="diff-grid" class="md:grid" style="--left: 50%; --right: 50%;">
+          <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <h4 class="text-sm font-semibold">Исходный текст</h4>
+                <p class="text-xs text-slate-500">{{ unit_labels.get(src, src) }}</p>
+              </div>
+              <button type="button" class="copy-btn inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-2.5 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-target="converted-input">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+            <textarea id="converted-input" readonly class="w-full h-96 rounded-lg border border-slate-200 bg-white px-3 py-3 font-mono text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400">{{ payload }}</textarea>
+          </div>
+
+          <div id="result-column" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <h4 class="text-sm font-semibold">Результат</h4>
+                <p class="text-xs text-slate-500">{{ unit_labels.get(dst, dst) }}</p>
+              </div>
+              <button type="button" class="copy-btn inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-2.5 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-target="converted-output">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="h-5 w-5 text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            </div>
+            <textarea id="converted-output" readonly class="w-full h-96 rounded-lg border border-slate-200 bg-white px-3 py-3 font-mono text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400">{{ converted_text }}</textarea>
+          </div>
         </div>
       </div>
     </div>
 
     <script>
       (function(){
-        const btn = document.getElementById('copy-btn');
-        const ta = document.getElementById('converted-output');
-        const label = document.getElementById('copy-label');
-        const icon = document.getElementById('copy-icon');
+        const copyButtons = Array.from(document.querySelectorAll('.copy-btn'));
+        const slider = document.getElementById('split-slider');
+        const grid = document.getElementById('diff-grid');
+        const toggle = document.getElementById('toggle-result');
 
-        async function copyText(text){
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            return navigator.clipboard.writeText(text);
-          }
-          ta.select();
-          document.execCommand('copy');
-          return Promise.resolve();
+        copyButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const targetId = btn.getAttribute('data-target');
+            const target = targetId ? document.getElementById(targetId) : null;
+            if (!target) return;
+            target.select();
+            document.execCommand('copy');
+          });
+        });
+
+        function updateSplit(value){
+          const left = Number(value);
+          const right = Math.max(0, 100 - left);
+          grid?.style.setProperty('--left', `${left}%`);
+          grid?.style.setProperty('--right', `${right}%`);
         }
 
-        function setState(text, success = true) {
-          if (label) label.textContent = text;
-          icon.classList.toggle('text-emerald-600', success);
-          icon.classList.toggle('text-rose-600', !success);
-          setTimeout(() => {
-            if (label) label.textContent = 'Скопировать';
-            icon.classList.remove('text-emerald-600', 'text-rose-600');
-          }, 1600);
-        }
+        slider?.addEventListener('input', (e) => updateSplit(e.target.value));
+        updateSplit(slider?.value || 50);
 
-        btn?.addEventListener('click', async () => {
-          try {
-            await copyText(ta.value);
-            setState('Скопировано', true);
-          } catch (e) {
-            setState('Ошибка копирования', false);
+        toggle?.addEventListener('click', () => {
+          const collapsed = grid?.classList.toggle('result-collapsed');
+          if (collapsed) {
+            toggle.textContent = 'Показать результат';
+          } else {
+            toggle.textContent = 'Скрыть результат';
           }
         });
       })();
