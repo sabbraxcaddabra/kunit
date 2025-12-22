@@ -1,0 +1,26 @@
+[[materials]]
+id = "hexolite-fast"
+name = "Hexolite (demo)"
+model = "mat-he-burn"
+units = "mm-mg-us"
+reference = "https://example.com/hexolite"
+comment = "Демонстрационная карта с базовыми параметрами горения."
+text = """*MAT_HIGH_EXPLOSIVE_BURN
+$ mid    ro       d       pcj     beta    k       g       sigy
+    1.0    1.840    8.180    2.140    0.000    0.000    0.000    0.000
+"""
+
+[[materials]]
+id = "jc-steel"
+name = "Steel (JC demo)"
+model = "mat-jc"
+units = "cm-g-us"
+reference = "https://example.com/johnson-cook"
+comment = "Базовая сталь для проверки конвертера без загрузок пользователем."
+text = """*MAT_JOHNSON_COOK
+$ mid     ro        g         e         pr        dtf      vp        rateop
+    1.0    7.800    0.000    0.000    1.000    0.000    0.000    0.000
+    0.510    0.000    0.260    0.014    1.030    294.000    294.000    0.000
+    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000
+    0.000    0.000    0.000    0.000    0.000    0.000    0.000    0.000
+"""

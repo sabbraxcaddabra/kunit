@@ -1,8 +1,9 @@
 import pytest
 
 from kunit.api import convert_string
-from kunit.core.fixed import split_fixed, join_fixed
+from kunit.core.fixed import join_fixed, split_fixed
 from kunit.core.units import BASE_SYSTEMS, scale_factor
+from kunit.models.eos_ignition_growth import DIMS
 
 
 def _fields(line: str) -> list[str]:
@@ -20,9 +21,12 @@ def test_ignition_growth_unit_scaling_from_reference_card():
 
     src = BASE_SYSTEMS["mm-mg-us"]
     dst = BASE_SYSTEMS["m-kg-s"]
-    pressure_scale = scale_factor(src, dst, (1, -1, -2))
-    specific_heat_scale = scale_factor(src, dst, (0, 2, -2))
-    time_scale = scale_factor(src, dst, (0, 0, -1))
+    pressure_scale = scale_factor(src, dst, DIMS["a"])
+    specific_heat_scale = scale_factor(src, dst, DIMS["g"])
+    cv_scale = scale_factor(src, dst, DIMS["cvp"])
+    time_scale = scale_factor(src, dst, DIMS["freq"])
+    fmxig_scale = scale_factor(src, dst, DIMS.get("fmxig", (0, 0, 0)))
+    fmxgr_scale = scale_factor(src, dst, DIMS.get("fmxgr", (0, 0, 0)))
 
     converted = convert_string(
         text, src="mm-mg-us", dst="m-kg-s", models="eos-ignition-growth"
@@ -38,7 +42,7 @@ def test_ignition_growth_unit_scaling_from_reference_card():
     card2 = _fields(lines[2])
     assert float(card2[0]) == pytest.approx(-0.05031 * pressure_scale)  # R2 (pressure)
     assert float(card2[1]) == pytest.approx(2.22e-5 * specific_heat_scale)  # R3 (cv)
-    assert float(card2[4]) == pytest.approx(0.022 * pressure_scale)  # FMXIG (pressure)
+    assert float(card2[4]) == pytest.approx(0.022 * fmxig_scale)  # FMXIG (dim or pressure)
     assert float(card2[5]) == pytest.approx(4.0e6 * time_scale)  # FREQ (1/time)
 
     # grow1 has dim 1/(P^EM * t); EM=2
@@ -48,8 +52,8 @@ def test_ignition_growth_unit_scaling_from_reference_card():
     )
 
     card3 = _fields(lines[3])
-    assert float(card3[2]) == pytest.approx(1e-5 * pressure_scale)  # CVP (pressure)
-    assert float(card3[3]) == pytest.approx(2.49e-5 * pressure_scale)  # CVR (pressure)
+    assert float(card3[2]) == pytest.approx(1e-5 * cv_scale)  # CVP (pressure)
+    assert float(card3[3]) == pytest.approx(2.49e-5 * cv_scale)  # CVR (pressure)
 
     card4 = _fields(lines[4])
     # grow2 has dim 1/(P^EN * t); EN=3
@@ -57,4 +61,4 @@ def test_ignition_growth_unit_scaling_from_reference_card():
     assert float(card4[0]) == pytest.approx(
         660 * time_scale * grow2_pressure_scale, rel=1e-5
     )
-    assert float(card4[4]) == pytest.approx(0.6 * time_scale)  # FMXGR (1/time)
+    assert float(card4[4]) == pytest.approx(0.6 * fmxgr_scale)  # FMXGR (1/time)

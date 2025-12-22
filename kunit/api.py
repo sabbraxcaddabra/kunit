@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from typing import Any, Iterable, List, Mapping, MutableMapping, Sequence
 
-from .core.units import BASE_SYSTEMS, BaseUnits, DIM
+from .core.units import BASE_SYSTEMS, BaseUnits, DIM, describe_unit_systems
 from .core.engine import CustomTransformMap, FieldTransform, convert_text, KeywordSpec
 from .models import ALL_SPECS, SPECS_BY_NAME
 
@@ -11,6 +11,12 @@ from .models import ALL_SPECS, SPECS_BY_NAME
 def get_unit_keys() -> List[str]:
     """Return available base unit system keys (e.g., 'mm-mg-us')."""
     return sorted(BASE_SYSTEMS.keys())
+
+
+def get_unit_descriptors():
+    """Return available base unit systems with presentation labels."""
+
+    return describe_unit_systems()
 
 
 def list_models() -> List[str]:
