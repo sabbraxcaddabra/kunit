@@ -24,6 +24,9 @@
 - Cover: `convert_text`, `convert_block`, numeric formatting (`format_lsdyna_10`), and each model spec’s dims/cards.
 - Run: `pytest -q` (optionally `pytest --maxfail=1 -q`). Add sample `.k` snippets to fixtures.
 
+## Runtime Verification
+- Before modifying any files, start the web application inside a container to confirm it boots cleanly.
+- Preferred command (stop with Ctrl+C after successful startup): `uv run gunicorn -c gunicorn.conf.py kunit.web.app:app`.
 ## Commit & Pull Request Guidelines
 - Commit messages: follow Conventional Commits (e.g., `feat(core): add scale factor for pressure`).
 - PRs must include: clear description, linked issue (if any), before/after `.k` line examples, and tests for conversion changes.

@@ -38,7 +38,7 @@ class MaterialStore:
     name = "Steel #1"
     model = "mat-jc"
     units = "mm-mg-us"
-    text = """*MAT..."""
+    text = "*MAT..."
     reference = "https://example.com/ref"
     comment = "Short note about provenance"
     """
