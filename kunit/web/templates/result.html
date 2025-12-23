@@ -9,13 +9,12 @@
       #diff-grid {
         display: grid;
         gap: 1rem;
-        grid-template-columns: minmax(0, var(--left, 50%)) minmax(0, var(--right, 50%));
-      }
-      #diff-grid.result-collapsed {
         grid-template-columns: 1fr;
       }
-      #diff-grid.result-collapsed #result-column {
-        display: none;
+      @media (min-width: 768px) {
+        #diff-grid.two-columns {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
       }
     </style>
   </head>
@@ -58,19 +57,16 @@
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h3 class="text-lg font-semibold">Текст до/после</h3>
-            <p class="text-sm text-slate-500">Полный исходник слева, результат справа. Сдвигайте ползунок или скрывайте правую колонку.</p>
+            <p class="text-sm text-slate-500">Полный исходник слева, результат справа. Можно скрывать любую колонку для удобства.</p>
           </div>
           <div class="flex items-center gap-3 flex-wrap">
-            <label class="text-sm text-slate-600 flex items-center gap-2">
-              <span>Смещение</span>
-              <input id="split-slider" type="range" min="35" max="65" value="50" class="w-32 accent-sky-600" aria-label="Сдвиг результата">
-            </label>
+            <button id="toggle-input" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скрыть исходник</button>
             <button id="toggle-result" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скрыть результат</button>
           </div>
         </div>
 
-        <div id="diff-grid" class="md:grid" style="--left: 50%; --right: 50%;">
-          <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+        <div id="diff-grid" class="two-columns">
+          <div id="input-column" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
             <div class="flex items-center justify-between gap-2">
               <div>
                 <h4 class="text-sm font-semibold">Исходный текст</h4>
@@ -102,9 +98,11 @@
     <script>
       (function(){
         const copyButtons = Array.from(document.querySelectorAll('.copy-btn'));
-        const slider = document.getElementById('split-slider');
         const grid = document.getElementById('diff-grid');
+        const inputColumn = document.getElementById('input-column');
         const toggle = document.getElementById('toggle-result');
+        const toggleInput = document.getElementById('toggle-input');
+        const resultColumn = document.getElementById('result-column');
 
         copyButtons.forEach(btn => {
           btn.addEventListener('click', () => {
@@ -116,24 +114,43 @@
           });
         });
 
-        function updateSplit(value){
-          const left = Number(value);
-          const right = Math.max(0, 100 - left);
-          grid?.style.setProperty('--left', `${left}%`);
-          grid?.style.setProperty('--right', `${right}%`);
+        function ensureAtLeastOneVisible(hiddenTarget) {
+          if (hiddenTarget && hiddenTarget.classList.contains('hidden')) {
+            if (hiddenTarget === inputColumn && resultColumn?.classList.contains('hidden')) {
+              resultColumn.classList.remove('hidden');
+            } else if (hiddenTarget === resultColumn && inputColumn?.classList.contains('hidden')) {
+              inputColumn.classList.remove('hidden');
+            }
+          }
         }
 
-        slider?.addEventListener('input', (e) => updateSplit(e.target.value));
-        updateSplit(slider?.value || 50);
+        function updateVisibility() {
+          const inputHidden = inputColumn?.classList.contains('hidden');
+          const resultHidden = resultColumn?.classList.contains('hidden');
+          if (grid) {
+            if (inputHidden || resultHidden) {
+              grid.classList.remove('two-columns');
+            } else {
+              grid.classList.add('two-columns');
+            }
+          }
+          if (toggleInput) toggleInput.textContent = inputHidden ? 'Показать исходник' : 'Скрыть исходник';
+          if (toggle) toggle.textContent = resultHidden ? 'Показать результат' : 'Скрыть результат';
+        }
+
+        toggleInput?.addEventListener('click', () => {
+          inputColumn?.classList.toggle('hidden');
+          ensureAtLeastOneVisible(inputColumn);
+          updateVisibility();
+        });
 
         toggle?.addEventListener('click', () => {
-          const collapsed = grid?.classList.toggle('result-collapsed');
-          if (collapsed) {
-            toggle.textContent = 'Показать результат';
-          } else {
-            toggle.textContent = 'Скрыть результат';
-          }
+          resultColumn?.classList.toggle('hidden');
+          ensureAtLeastOneVisible(resultColumn);
+          updateVisibility();
         });
+
+        updateVisibility();
       })();
     </script>
   </body>
