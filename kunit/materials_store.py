@@ -6,6 +6,7 @@ from typing import Any, Iterable, List, Mapping, Sequence
 
 import tomllib
 
+from kunit.api import convert_string
 from kunit.core import engine
 from kunit.core.engine import KeywordSpec
 from kunit.core.fixed import format_lsdyna_10, join_fixed, split_fixed
@@ -257,6 +258,31 @@ def export_materials(materials: Sequence[MaterialRecord]) -> str:
             if id_fields:
                 text = _rewrite_identifier(text, spec, id_fields, idx)
         out.append(text)
+
+    return "".join(out)
+
+
+def convert_materials(materials: Sequence[MaterialRecord], dst_units: str) -> str:
+    """Convert materials to dst_units and rewrite identifiers to incremental ids."""
+
+    out: List[str] = []
+
+    for idx, material in enumerate(materials, start=1):
+        models = list(material.models) if material.models else [material.model]
+        converted = convert_string(
+            material.to_k(),
+            src=material.units,
+            dst=dst_units,
+            models=models,
+        )
+        converted = converted if converted.endswith("\n") else f"{converted}\n"
+
+        for spec in _identifier_specs(material):
+            id_fields = _identifier_fields(spec)
+            if id_fields:
+                converted = _rewrite_identifier(converted, spec, id_fields, idx)
+
+        out.append(converted)
 
     return "".join(out)
 

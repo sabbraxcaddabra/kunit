@@ -3,7 +3,7 @@ from pathlib import Path
 
 from kunit.api import convert_string
 from kunit.core.fixed import format_lsdyna_10, join_fixed
-from kunit.materials_store import MaterialStore, export_materials
+from kunit.materials_store import MaterialStore, convert_materials, export_materials
 
 
 def _write_material(tmp_path: Path, content: str) -> Path:
@@ -250,7 +250,61 @@ def test_export_materials_enforces_shared_auto_increment_ids(tmp_path: Path):
     second_mat_idx = lines.index("*MAT_HIGH_EXPLOSIVE_BURN", first_mat_idx + 1)
 
     assert lines[first_mat_idx + 2][:10].strip() == "1"
-    assert lines[first_mat_idx + 5][:10].strip() == "1"
+    first_eos_idx = lines.index("*EOS_JWL", first_mat_idx + 1)
+    assert lines[first_eos_idx + 2][:10].strip() == "1"
 
     assert lines[second_mat_idx + 2][:10].strip() == "2"
-    assert lines[second_mat_idx + 5][:10].strip() == "2"
+    second_eos_idx = lines.index("*EOS_JWL", second_mat_idx + 1)
+    assert lines[second_eos_idx + 2][:10].strip() == "2"
+
+
+def test_convert_materials_rewrites_identifiers(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        textwrap.dedent(
+            f'''
+            [[materials]]
+            id = "first"
+            name = "First"
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            text = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+            {_fixed_line([22, 1.891, 0.911, 0.42, 0.0, 0.0, 0.0, 0.0])}
+            *EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+            {_fixed_line([23, 7.783, 0.07871, 4.2, 4.0, 0.3, 1.0, 1.05])}
+            """
+
+            [[materials]]
+            id = "second"
+            name = "Second"
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            text = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+            {_fixed_line([105, 2.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0])}
+            *EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+            {_fixed_line([205, 8.0, 0.07, 4.5, 4.4, 0.31, 1.4, 1.1])}
+            """
+            '''
+        ),
+    )
+
+    store = MaterialStore(tmp_path)
+    materials = store.list_materials()
+
+    converted = convert_materials(materials, "cm-g-us")
+    lines = converted.splitlines()
+
+    first_mat_idx = lines.index("*MAT_HIGH_EXPLOSIVE_BURN")
+    second_mat_idx = lines.index("*MAT_HIGH_EXPLOSIVE_BURN", first_mat_idx + 1)
+
+    assert lines[first_mat_idx + 2][:10].strip() == "1"
+    first_eos_idx = lines.index("*EOS_JWL", first_mat_idx + 1)
+    assert lines[first_eos_idx + 2][:10].strip() == "1"
+
+    assert lines[second_mat_idx + 2][:10].strip() == "2"
+    second_eos_idx = lines.index("*EOS_JWL", second_mat_idx + 1)
+    assert lines[second_eos_idx + 2][:10].strip() == "2"
