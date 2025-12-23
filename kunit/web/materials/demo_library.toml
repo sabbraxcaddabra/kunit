@@ -1,14 +1,31 @@
 [[materials]]
-id = "hexolite-fast"
-name = "Hexolite (demo)"
+id = "hmx"
+name = "Октоген"
 model = "mat-he-burn"
 units = "mm-mg-us"
 reference = "https://example.com/hexolite"
-comment = "Демонстрационная карта с базовыми параметрами горения."
-tags = "взрывчатка, демо, mm-mg-us"
-text = """*MAT_HIGH_EXPLOSIVE_BURN
-$ mid    ro       d       pcj     beta    k       g       sigy
-    1.0    1.840    8.180    2.140    0.000    0.000    0.000    0.000
+comment = "Взрывяатое вещество октоген"
+tags = "взрывчатка, октоген"
+text = """
+*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+hmx
+$#     mid        ro         d       pcj      beta         k         g      sigy
+        22     1.891      9.11      42.0       0.0       0.0       0.0       0.0
+"""
+
+[[materials]]
+id = "hmx-jwl"
+name = "Октоген"
+model = "mat-he-burn (УРС JWL)"
+units = "mm-mg-us"
+reference = "https://example.com/hexolite"
+comment = "Взрывяатое вещество октоген (УРС JWL)"
+tags = "взрывчатка, октоген"
+text = """
+*EOS_JWL_TITLE
+hmx
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+        22     778.3     7.071       4.2       1.0       0.3      10.5       0.0
 """
 
 [[materials]]
