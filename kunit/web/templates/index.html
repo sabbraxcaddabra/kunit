@@ -14,6 +14,7 @@
           <h1 class="text-3xl font-semibold leading-tight">kunit — конвертер единиц</h1>
           <p class="text-slate-600">Преобразуйте модели между системами единиц, сохраняя фиксированную ширину.</p>
         </div>
+        <a href="/materials" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">Библиотека материалов</a>
       </header>
 
       {% if error_msg %}
@@ -23,147 +24,69 @@
       {% endif %}
 
       <form id="convert-form" method="post" action="/convert" enctype="multipart/form-data" class="space-y-6">
-        <div class="grid lg:grid-cols-2 gap-6">
-          <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
-            <div class="space-y-2">
-              <label for="file_input" class="block text-sm font-medium text-slate-700">Файл (.k)</label>
-              <input type="file" id="file_input" name="file_input" accept=".k,text/plain" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
-              <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
-            </div>
-            <div class="space-y-2">
-              <label for="text_input" class="block text-sm font-medium text-slate-700">Или вставьте текст</label>
-              <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..." class="w-full h-56 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
-            </div>
-            <input type="hidden" name="custom_transforms" value="{{ custom_transforms }}" />
+        <input type="hidden" name="custom_transforms" value="{{ custom_transforms }}" />
+
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-5">
+          <div class="space-y-2">
+            <label for="file_input" class="block text-sm font-medium text-slate-700">Файл (.k)</label>
+            <input type="file" id="file_input" name="file_input" accept=".k,text/plain" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
+            <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
           </div>
 
-          <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
-            <div class="grid md:grid-cols-[1fr_auto_1fr] items-end gap-3">
-              <div>
-                <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
-                {% set selected_src = selected_src or (units|first).key %}
-                <select name="src" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
-                  {% for u in units %}
-                  <option value="{{ u.key }}" {% if selected_src == u.key %}selected{% endif %}>{{ u.label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="text-center text-slate-500 pb-2">→</div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
-                {% set selected_dst = selected_dst or (units|last).key %}
-                <select name="dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
-                  {% for u in units %}
-                  <option value="{{ u.key }}" {% if selected_dst == u.key %}selected{% endif %}>{{ u.label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-
+          <div class="space-y-3">
             <div>
-              <p class="block text-sm font-medium text-slate-700 mb-2">Модели</p>
-              {% set selected_models = selected_models or default_models %}
-              <div class="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
-                {% for m in models %}
-                <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50/80 hover:border-sky-300">
-                  <input type="checkbox" name="models" value="{{ m }}" {% if not selected_models or m in selected_models %}checked{% endif %} class="h-4 w-4 text-sky-600 border-slate-300 rounded" />
-                  <span class="text-sm text-slate-800">{{ m }}</span>
-                </label>
+              <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
+              {% set selected_src = selected_src or (units|first).key %}
+              <select name="src" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                {% for u in units %}
+                <option value="{{ u.key }}" {% if selected_src == u.key %}selected{% endif %}>{{ u.label }}</option>
                 {% endfor %}
-              </div>
+              </select>
             </div>
-
-            <div class="space-y-2">
-              <label for="out_name" class="block text-sm font-medium text-slate-700">Имя файла результата</label>
-              <input type="text" id="out_name" name="out_name" value="{{ out_name or 'converted.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">→</span>
+              <span>Перевести в</span>
             </div>
-
-            <div class="flex items-center gap-3 pt-2">
-              <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Конвертировать</button>
-              <p class="text-xs text-slate-500">Состояние формы сохраняется локально.</p>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
+              {% set selected_dst = selected_dst or (units|last).key %}
+              <select name="dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                {% for u in units %}
+                <option value="{{ u.key }}" {% if selected_dst == u.key %}selected{% endif %}>{{ u.label }}</option>
+                {% endfor %}
+              </select>
             </div>
           </div>
-        </div>
-      </form>
 
-      <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
-        <div class="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">Карты материалов</p>
-            <h2 class="text-xl font-semibold leading-tight">Выбор из библиотеки (без загрузки)</h2>
-            <p class="text-slate-600 text-sm">Материалы добавляет только разработчик в папку приложения; выберите нужные и экспортируйте их в одну систему единиц.</p>
-          </div>
-          <div class="text-sm text-slate-600">Всего доступно: {{ materials|length }}</div>
-        </div>
-
-        {% if materials_error %}
-          <div class="rounded-lg border border-rose-200 bg-rose-50 text-rose-900 px-4 py-3">{{ materials_error }}</div>
-        {% endif %}
-
-        <form method="post" action="/materials/export" class="space-y-4">
-          <div class="grid md:grid-cols-[2fr_1fr] gap-4">
-            <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto pr-1">
-              {% for m in materials %}
-                <label class="flex items-start gap-3 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50/80 hover:border-sky-300">
-                  <input type="checkbox" name="materials" value="{{ m.material_id }}" class="mt-1 h-4 w-4 text-sky-600 border-slate-300 rounded" {% if m.material_id in (selected_materials or []) %}checked{% endif %} />
-                  <span class="text-sm text-slate-800">
-                    <span class="font-semibold block">{{ m.name }}</span>
-                    <span class="text-xs text-slate-500">{{ m.model }} · {{ unit_labels.get(m.units, m.units) }}</span>
-                    {% if m.comment %}
-                      <span class="text-xs text-slate-600 block">{{ m.comment }}</span>
-                    {% endif %}
-                    {% if m.tags %}
-                      <span class="text-xs text-slate-500 block">{{ ", ".join(m.tags) }}</span>
-                    {% endif %}
-                    {% if m.reference %}
-                      <a href="{{ m.reference }}" target="_blank" rel="noreferrer" class="text-xs text-sky-600 hover:text-sky-700">Источник</a>
-                    {% endif %}
-                  </span>
-                </label>
+            <p class="block text-sm font-medium text-slate-700 mb-2">Модели</p>
+            {% set selected_models = selected_models or default_models %}
+            <div class="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+              {% for m in models %}
+              <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50/80 hover:border-sky-300">
+                <input type="checkbox" name="models" value="{{ m }}" {% if not selected_models or m in selected_models %}checked{% endif %} class="h-4 w-4 text-sky-600 border-slate-300 rounded" />
+                <span class="text-sm text-slate-800">{{ m }}</span>
+              </label>
               {% endfor %}
             </div>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-sm font-medium text-slate-700">Экспортировать в единицы</label>
-                {% set materials_dst = materials_dst or (units|first).key %}
-                <select name="materials_dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
-                  {% for u in units %}
-                  <option value="{{ u.key }}" {% if materials_dst == u.key %}selected{% endif %}>{{ u.label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700">Имя файла для выгрузки</label>
-                <input type="text" name="materials_out_name" value="{{ materials_out_name or 'materials.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
-              </div>
-              <div class="flex items-center gap-3">
-                <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">Экспортировать</button>
-                <p class="text-xs text-slate-500">Можно сразу копировать результат или скачать файл.</p>
-              </div>
-            </div>
           </div>
 
-          {% if materials_export %}
-            <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-4 space-y-3">
-              <div class="flex items-center justify-between gap-3 flex-wrap">
-                <div>
-                  <p class="text-sm font-semibold">Результат экспорта</p>
-                  <p class="text-xs text-slate-500">Сконвертировано в {{ unit_labels.get(materials_dst, materials_dst) }}.</p>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button type="button" id="materials-copy" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 text-sm" data-target="materials-output">Копировать</button>
-                  <form method="post" action="/materials/download" class="flex items-center">
-                    <input type="hidden" name="payload" value="{{ materials_export }}" />
-                    <input type="hidden" name="materials_out_name" value="{{ materials_out_name or 'materials.k' }}" />
-                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скачать</button>
-                  </form>
-                </div>
-              </div>
-              <textarea id="materials-output" readonly class="w-full h-60 rounded-xl border border-slate-200 bg-white px-3 py-3 font-mono text-sm focus:ring-2 focus:ring-sky-400 focus:border-sky-400">{{ materials_export }}</textarea>
-            </div>
-          {% endif %}
-        </form>
-      </div>
+          <div class="space-y-2">
+            <label for="out_name" class="block text-sm font-medium text-slate-700">Имя файла результата</label>
+            <input type="text" id="out_name" name="out_name" value="{{ out_name or 'converted.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Конвертировать</button>
+            <p class="text-xs text-slate-500">Состояние формы сохраняется локально.</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-3">
+          <label for="text_input" class="block text-sm font-medium text-slate-700">Или вставьте текст</label>
+          <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..." class="w-full min-h-[22rem] rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
+        </div>
+      </form>
     </div>
 
     <script>
@@ -175,7 +98,6 @@
         const outName = document.getElementById('out_name');
         const txt = document.getElementById('text_input');
         const fileInput = document.getElementById('file_input');
-        const materialsCopy = document.getElementById('materials-copy');
 
         function getSelectedModels() {
           return Array.from(form.querySelectorAll('input[name="models"]'))
@@ -224,14 +146,6 @@
           });
         });
         form.addEventListener('submit', saveState);
-
-        materialsCopy?.addEventListener('click', () => {
-          const targetId = materialsCopy.getAttribute('data-target');
-          const target = document.getElementById(targetId);
-          if (!target) return;
-          target.select();
-          document.execCommand('copy');
-        });
       })();
     </script>
   </body>

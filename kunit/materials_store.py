@@ -102,11 +102,16 @@ class MaterialStore:
         if comment is not None and not isinstance(comment, str):
             raise ValueError(f"Comment for material '{material_id}' must be a string if provided")
 
-        tags = raw.get("tags") or []
-        if not isinstance(tags, Sequence) or isinstance(tags, (str, bytes)):
-            raise ValueError(f"Tags for material '{material_id}' must be a list of strings")
-        if any(not isinstance(tag, str) for tag in tags):
-            raise ValueError(f"Each tag for material '{material_id}' must be a string")
+        raw_tags = raw.get("tags") or []
+        tags: List[str]
+        if isinstance(raw_tags, str):
+            tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
+        elif isinstance(raw_tags, Sequence) and not isinstance(raw_tags, (str, bytes)):
+            if any(not isinstance(tag, str) for tag in raw_tags):
+                raise ValueError(f"Each tag for material '{material_id}' must be a string")
+            tags = [str(tag).strip() for tag in raw_tags if str(tag).strip()]
+        else:
+            raise ValueError(f"Tags for material '{material_id}' must be a list of strings or a comma-separated string")
 
         meta = raw.get("meta") if isinstance(raw.get("meta"), Mapping) else {}
 

@@ -39,12 +39,23 @@ def create_app() -> Flask:
     def _index_context(**kwargs):
         unit_options = get_unit_descriptors()
         models = list_models()
-        materials = materials_store.list_materials()
         unit_labels = {u.key: u.label for u in unit_options}
         base_ctx = dict(
             units=unit_options,
             models=models,
             default_models=models,
+            unit_labels=unit_labels,
+            custom_transforms="",
+        )
+        base_ctx.update(kwargs)
+        return base_ctx
+
+    def _materials_context(**kwargs):
+        unit_options = get_unit_descriptors()
+        unit_labels = {u.key: u.label for u in unit_options}
+        materials = materials_store.list_materials()
+        base_ctx = dict(
+            units=unit_options,
             unit_labels=unit_labels,
             materials=materials,
         )
@@ -54,6 +65,13 @@ def create_app() -> Flask:
     @app.get("/")
     def index():
         return render_template("index.html", **_index_context(custom_transforms=""))
+
+    @app.get("/materials")
+    def materials_page():
+        return render_template(
+            "materials.html",
+            **_materials_context(materials_out_name="materials.k"),
+        )
 
     @app.post("/convert")
     def convert():
@@ -142,24 +160,20 @@ def create_app() -> Flask:
 
     @app.post("/materials/export")
     def export_materials():
-        units = get_unit_descriptors()
-        unit_labels = {u.key: u.label for u in units}
-        materials = materials_store.list_materials()
         selected_ids = set(request.form.getlist("materials"))
         dst_units = request.form.get("materials_dst", type=str)
         out_name = (request.form.get("materials_out_name", type=str) or "materials.k").strip()
-        selected = [m for m in materials if m.material_id in selected_ids]
+        selected = [m for m in materials_store.list_materials() if m.material_id in selected_ids]
 
         if not selected:
             return (
                 render_template(
-                    "index.html",
-                    **_index_context(
+                    "materials.html",
+                    **_materials_context(
                         materials_error="Нужно выбрать хотя бы один материал",
                         selected_materials=selected_ids,
                         materials_dst=dst_units,
                         materials_out_name=out_name,
-                        custom_transforms="",
                     ),
                 ),
                 400,
@@ -170,27 +184,24 @@ def create_app() -> Flask:
         except Exception as e:
             return (
                 render_template(
-                    "index.html",
-                    **_index_context(
+                    "materials.html",
+                    **_materials_context(
                         materials_error=f"Ошибка экспорта материалов: {e}",
                         selected_materials=selected_ids,
                         materials_dst=dst_units,
                         materials_out_name=out_name,
-                        custom_transforms="",
                     ),
                 ),
                 400,
             )
 
         return render_template(
-            "index.html",
-            **_index_context(
+            "materials.html",
+            **_materials_context(
                 selected_materials=selected_ids,
                 materials_dst=dst_units,
                 materials_out_name=out_name,
                 materials_export=payload,
-                unit_labels=unit_labels,
-                custom_transforms="",
             ),
         )
 
