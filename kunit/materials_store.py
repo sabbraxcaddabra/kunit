@@ -37,12 +37,27 @@ class MaterialSection:
     model: str
     units: str
     payload: str
-    models: Sequence[str] = field(default_factory=list)
+
+    def to_k(self) -> str:
+        """Return payload text with trailing newline for concatenation."""
+
+        return self.payload if self.payload.endswith("\n") else f"{self.payload}\n"
+
+
+@dataclass(frozen=True)
+class MaterialRecord:
+    material_id: str
+    name: str
+    model: str
+    units: str
+    payload: str
+    models: Sequence[str]
     reference: str | None = None
     comment: str | None = None
     tags: Sequence[str] = field(default_factory=list)
     meta: Mapping[str, Any] = field(default_factory=dict)
     source: str | None = None
+    sections: Sequence[MaterialSection] = field(default_factory=list)
 
     @property
     def material(self) -> MaterialSection:
@@ -57,19 +72,6 @@ class MaterialSection:
             if section.kind == "eos":
                 return section
         return None
-
-    # Backwards-compatible accessors for existing templates/usages
-    @property
-    def model(self) -> str:
-        return self.material.model
-
-    @property
-    def units(self) -> str:
-        return self.material.units
-
-    @property
-    def payload(self) -> str:
-        return self.material.payload
 
     def to_k(self) -> str:
         """Return .k text for all sections with trailing newline for concatenation."""
@@ -174,6 +176,27 @@ class MaterialStore:
 
         meta = raw.get("meta") if isinstance(raw.get("meta"), Mapping) else {}
 
+        sections: List[MaterialSection] = []
+        for section_name in ("material", "eos"):
+            section_data = raw.get(section_name)
+            if section_data is not None:
+                sections.append(
+                    self._normalize_section(section_data, section_name, source_path)
+                )
+
+        if not sections:
+            section = self._normalize_section(
+                raw,
+                kind="material",
+                source_path=source_path,
+            )
+            sections.append(section)
+
+        material_section = sections[0]
+        model = material_section.model
+        units = material_section.units
+        payload = material_section.payload
+
         raw_models = raw.get("models")
         models: List[str] = []
         if raw_models is None:
@@ -187,7 +210,9 @@ class MaterialStore:
         else:
             raise ValueError(f"Models for material '{material_id}' must be a list or comma-separated string when provided")
 
-        detected = _extract_models_from_payload(payload)
+        combined_payload = "\n".join(section.payload for section in sections)
+
+        detected = _extract_models_from_payload(combined_payload)
         for m in detected:
             if m not in models:
                 models.append(m)
@@ -213,6 +238,7 @@ class MaterialStore:
             tags=list(tags),
             meta=meta,
             source=str(source_path),
+            sections=sections,
         )
 
 
