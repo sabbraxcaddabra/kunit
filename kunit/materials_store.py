@@ -7,7 +7,28 @@ from typing import Any, Iterable, List, Mapping, Sequence
 import tomllib
 
 from kunit.core.units import BASE_SYSTEMS
-from kunit.models import SPECS_BY_NAME
+from kunit.models import ALL_SPECS, SPECS_BY_NAME
+
+
+def _extract_models_from_payload(payload: str) -> List[str]:
+    """Return ordered unique models detected by keyword prefixes in payload."""
+
+    models: List[str] = []
+    seen = set()
+    spec_prefixes = [(spec.keyword_prefix.upper(), spec.name) for spec in ALL_SPECS]
+
+    for line in payload.splitlines():
+        s = line.lstrip()
+        if not s.startswith("*"):
+            continue
+        upper = s.upper()
+        for prefix, name in spec_prefixes:
+            if upper.startswith(prefix) and name not in seen:
+                models.append(name)
+                seen.add(name)
+                break
+
+    return models
 
 
 @dataclass(frozen=True)
@@ -17,6 +38,7 @@ class MaterialRecord:
     model: str
     units: str
     payload: str
+    models: Sequence[str] = field(default_factory=list)
     reference: str | None = None
     comment: str | None = None
     tags: Sequence[str] = field(default_factory=list)
@@ -115,12 +137,40 @@ class MaterialStore:
 
         meta = raw.get("meta") if isinstance(raw.get("meta"), Mapping) else {}
 
+        raw_models = raw.get("models")
+        models: List[str] = []
+        if raw_models is None:
+            models = [model]
+        elif isinstance(raw_models, str):
+            models = [m for m in (s.strip() for s in raw_models.split(",")) if m]
+        elif isinstance(raw_models, Sequence) and not isinstance(raw_models, (str, bytes)):
+            if any(not isinstance(m, str) for m in raw_models):
+                raise ValueError(f"Each model for material '{material_id}' must be a string")
+            models = [str(m).strip() for m in raw_models if str(m).strip()]
+        else:
+            raise ValueError(f"Models for material '{material_id}' must be a list or comma-separated string when provided")
+
+        detected = _extract_models_from_payload(payload)
+        for m in detected:
+            if m not in models:
+                models.append(m)
+        if model not in models:
+            models.insert(0, model)
+
+        unknown_models = [m for m in models if m not in SPECS_BY_NAME]
+        if unknown_models:
+            known = ", ".join(sorted(SPECS_BY_NAME))
+            raise ValueError(
+                f"Unknown models {unknown_models} for material '{material_id}' in {source_path}; known: {known}"
+            )
+
         return MaterialRecord(
             material_id=material_id,
             name=name,
             model=model,
             units=units,
             payload=payload,
+            models=models,
             reference=reference,
             comment=comment,
             tags=list(tags),
