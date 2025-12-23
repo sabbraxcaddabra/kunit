@@ -26,7 +26,7 @@
 
       <form method="post" action="/materials/export" class="space-y-5">
         <div class="grid lg:grid-cols-[2fr_1fr] gap-5 items-start">
-          <div class="grid sm:grid-cols-2 gap-4 max-h-[32rem] overflow-y-auto pr-1">
+          <div class="space-y-4 max-h-[32rem] overflow-y-auto pr-1">
             {% for m in materials %}
               <label class="flex flex-col gap-3 rounded-xl border border-slate-200 px-4 py-3 bg-white/80 hover:border-sky-300 shadow-sm">
                 <div class="flex items-start gap-3">
@@ -49,9 +49,12 @@
                     {% endif %}
                   </div>
                 </div>
-                <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-2">
-                  <p class="text-xs uppercase tracking-wide text-slate-500 font-semibold mb-1">Текст карты</p>
-                  <pre class="text-[13px] leading-5 font-mono text-slate-800 whitespace-pre-wrap">{{ m.payload }}</pre>
+                <div class="rounded-lg border border-slate-200 bg-slate-50/70 p-2 space-y-2">
+                  <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs uppercase tracking-wide text-slate-500 font-semibold">Текст карты</p>
+                    <button type="button" class="inline-flex items-center justify-center rounded border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-copy-target="material-payload-{{ loop.index }}">Копировать</button>
+                  </div>
+                  <pre id="material-payload-{{ loop.index }}" class="text-[13px] leading-5 font-mono text-slate-800 whitespace-pre-wrap">{{ m.payload }}</pre>
                 </div>
               </label>
             {% endfor %}
@@ -109,6 +112,34 @@
           if (!target) return;
           target.select();
           document.execCommand('copy');
+        });
+
+        const cardCopyButtons = document.querySelectorAll('[data-copy-target]');
+        cardCopyButtons.forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const targetId = btn.getAttribute('data-copy-target');
+            const target = targetId ? document.getElementById(targetId) : null;
+            if (!target) return;
+            const text = target.textContent || '';
+            try {
+              if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+                return;
+              }
+            } catch (err) {
+              console.warn('clipboard write failed', err);
+            }
+
+            const helper = document.createElement('textarea');
+            helper.value = text;
+            helper.setAttribute('readonly', 'true');
+            helper.style.position = 'absolute';
+            helper.style.left = '-9999px';
+            document.body.appendChild(helper);
+            helper.select();
+            document.execCommand('copy');
+            document.body.removeChild(helper);
+          });
         });
       })();
     </script>
