@@ -23,6 +23,7 @@
 - Framework: `pytest`. Place tests under `tests/` as `test_*.py`.
 - Cover: `convert_text`, `convert_block`, numeric formatting (`format_lsdyna_10`), and each model spec’s dims/cards.
 - Run: `pytest -q` (optionally `pytest --maxfail=1 -q`). Add sample `.k` snippets to fixtures.
+- After any change, run the test suite locally and ensure it passes before submitting.
 
 ## Runtime Verification
 - Before modifying any files, start the web application inside a container to confirm it boots cleanly.

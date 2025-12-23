@@ -253,9 +253,9 @@ def export_materials(materials: Sequence[MaterialRecord]) -> str:
     for idx, material in enumerate(materials, start=1):
         text = material.to_k()
         for spec in _identifier_specs(material):
-            field_name = _identifier_field(spec)
-            if field_name:
-                text = _rewrite_identifier(text, spec, field_name, idx)
+            id_fields = _identifier_fields(spec)
+            if id_fields:
+                text = _rewrite_identifier(text, spec, id_fields, idx)
         out.append(text)
 
     return "".join(out)
@@ -263,22 +263,30 @@ def export_materials(materials: Sequence[MaterialRecord]) -> str:
 
 def _identifier_specs(material: MaterialRecord) -> List[KeywordSpec]:
     specs: List[KeywordSpec] = []
-    for name in material.models:
+    seen: set[str] = set()
+    candidate_names = [section.model for section in material.sections]
+    candidate_names.extend(material.models)
+
+    for name in candidate_names:
+        if name in seen:
+            continue
         spec = SPECS_BY_NAME.get(name)
         if spec:
             specs.append(spec)
+            seen.add(name)
     return specs
 
 
-def _identifier_field(spec: KeywordSpec) -> str | None:
+def _identifier_fields(spec: KeywordSpec) -> set[str]:
+    id_fields: set[str] = set()
     for card in spec.cards:
         for field in card:
             if field in {"mid", "eosid"}:
-                return field
-    return None
+                id_fields.add(field)
+    return id_fields
 
 
-def _rewrite_identifier(payload: str, spec: KeywordSpec, field_name: str, new_id: int) -> str:
+def _rewrite_identifier(payload: str, spec: KeywordSpec, field_names: set[str], new_id: int) -> str:
     lines = payload.splitlines(keepends=True)
     out: List[str] = []
 
@@ -292,7 +300,7 @@ def _rewrite_identifier(payload: str, spec: KeywordSpec, field_name: str, new_id
             while i < len(lines) and not lines[i].lstrip().startswith("*"):
                 block.append(lines[i])
                 i += 1
-            out.extend(_rewrite_block_identifier(block, spec, field_name, new_id))
+            out.extend(_rewrite_block_identifier(block, spec, field_names, new_id))
             continue
 
         out.append(line)
@@ -303,7 +311,7 @@ def _rewrite_identifier(payload: str, spec: KeywordSpec, field_name: str, new_id
 
 
 def _rewrite_block_identifier(
-    block: List[str], spec: KeywordSpec, field_name: str, new_id: int
+    block: List[str], spec: KeywordSpec, field_names: set[str], new_id: int
 ) -> List[str]:
     data_idxs = engine._extract_data_lines(block, n=len(spec.cards))  # type: ignore[attr-defined]
     if not data_idxs:
@@ -312,12 +320,12 @@ def _rewrite_block_identifier(
     out = block[:]
 
     for line_i, card_fields in zip(data_idxs, spec.cards):
-        if field_name not in card_fields:
+        if not field_names.intersection(card_fields):
             continue
         fields = split_fixed(block[line_i])
         new_fields: List[str] = []
         for name, raw in zip(card_fields, fields):
-            if name == field_name:
+            if name in field_names:
                 new_fields.append(format_lsdyna_10(new_id))
             else:
                 new_fields.append(raw.strip())

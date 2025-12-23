@@ -190,3 +190,67 @@ def test_export_materials_rewrites_identifiers(tmp_path: Path):
     assert lines[mat1 + 5][:10].strip() == "1"
     assert "*EOS_JWL" in lines[mat2 + 3]
     assert lines[mat2 + 5][:10].strip() == "2"
+
+
+def test_export_materials_enforces_shared_auto_increment_ids(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        textwrap.dedent(
+            '''
+            [[materials]]
+            id = "gamma"
+            name = "Gamma"
+
+            [materials.material]
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            payload = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+                    7       1.2       2.0       3.0       0.0       0.0       0.0       4.0
+            """
+
+            [materials.eos]
+            model = "eos-jwl"
+            units = "mm-mg-us"
+            payload = """*EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+                   42      10.0      20.0       1.0       2.0       3.0      60.0       0.5
+            """
+
+            [[materials]]
+            id = "delta"
+            name = "Delta"
+
+            [materials.material]
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            payload = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+                   99       1.5       2.5       3.5       0.0       0.0       0.0       4.5
+            """
+
+            [materials.eos]
+            model = "eos-jwl"
+            units = "mm-mg-us"
+            payload = """*EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+                    5      11.0      21.0       1.5       2.5       3.5      61.0       0.8
+            """
+            '''
+        ),
+    )
+
+    store = MaterialStore(tmp_path)
+    materials = store.list_materials()
+
+    exported = export_materials(materials)
+    lines = exported.splitlines()
+
+    first_mat_idx = lines.index("*MAT_HIGH_EXPLOSIVE_BURN")
+    second_mat_idx = lines.index("*MAT_HIGH_EXPLOSIVE_BURN", first_mat_idx + 1)
+
+    assert lines[first_mat_idx + 2][:10].strip() == "1"
+    assert lines[first_mat_idx + 5][:10].strip() == "1"
+
+    assert lines[second_mat_idx + 2][:10].strip() == "2"
+    assert lines[second_mat_idx + 5][:10].strip() == "2"
