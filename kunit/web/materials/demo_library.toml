@@ -15,8 +15,8 @@ $#     mid        ro         d       pcj      beta         k         g      sigy
 
 [[materials]]
 id = "hmx-jwl"
-name = "Октоген"
-model = "mat-he-burn (УРС JWL)"
+name = "Октоген (УРС JWL)"
+model = "mat-he-burn"
 units = "mm-mg-us"
 reference = "https://example.com/hexolite"
 comment = "Взрывяатое вещество октоген (УРС JWL)"
