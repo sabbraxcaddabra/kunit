@@ -11,6 +11,20 @@ from kunit.api import convert_string, get_unit_descriptors, get_unit_keys, list_
 from kunit.materials_store import MaterialRecord, MaterialStore
 
 
+def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
+    blocks = []
+    for record in records:
+        models = list(record.models) if record.models else [record.model]
+        converted = convert_string(
+            record.payload,
+            src=record.units,
+            dst=dst_units,
+            models=models,
+        )
+        blocks.append(converted if converted.endswith("\n") else f"{converted}\n")
+    return "".join(blocks)
+
+
 def create_app() -> Flask:
     app = Flask(__name__)
     materials_root = Path(__file__).resolve().parent / "materials"
@@ -145,18 +159,6 @@ def create_app() -> Flask:
             unit_labels=unit_labels,
             custom_transforms=custom_transforms,
         )
-
-    def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
-        blocks = []
-        for record in records:
-            converted = convert_string(
-                record.payload,
-                src=record.units,
-                dst=dst_units,
-                models=[record.model],
-            )
-            blocks.append(converted if converted.endswith("\n") else f"{converted}\n")
-        return "".join(blocks)
 
     @app.post("/materials/export")
     def export_materials():
