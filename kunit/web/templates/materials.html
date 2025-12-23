@@ -36,11 +36,8 @@
                       <h2 class="text-base font-semibold text-slate-900">{{ m.name }}</h2>
                       <span class="text-xs text-slate-500">{{ m.material_id }}</span>
                     </div>
-                      <div class="space-y-1">
-                        {% for section in m.sections %}
-                          <p class="text-sm text-slate-600">Блок {{ section.kind|upper }}: {{ section.model }} · Размерность: {{ unit_labels.get(section.units, section.units) }}</p>
-                        {% endfor %}
-                      </div>
+                    {% set models = m.models or [m.model] %}
+                    <p class="text-sm text-slate-600">Модели: {{ models|join(', ') }} · Размерность: {{ unit_labels.get(m.units, m.units) }}</p>
                     {% if m.comment %}
                       <p class="text-xs text-slate-500">{{ m.comment }}</p>
                     {% endif %}
