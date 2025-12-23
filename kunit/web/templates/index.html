@@ -33,7 +33,7 @@
             <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
           </div>
 
-          <div class="grid md:grid-cols-[1fr_auto_1fr] items-end gap-3">
+          <div class="space-y-3">
             <div>
               <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
               {% set selected_src = selected_src or (units|first).key %}
@@ -43,7 +43,10 @@
                 {% endfor %}
               </select>
             </div>
-            <div class="text-center text-slate-500 pb-2">→</div>
+            <div class="flex items-center gap-2 text-sm text-slate-600">
+              <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">→</span>
+              <span>Перевести в</span>
+            </div>
             <div>
               <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
               {% set selected_dst = selected_dst or (units|last).key %}
