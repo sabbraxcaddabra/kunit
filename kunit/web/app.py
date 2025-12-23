@@ -16,7 +16,7 @@ def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str)
     for record in records:
         models = list(record.models) if record.models else [record.model]
         converted = convert_string(
-            record.payload,
+            record.to_k(),
             src=record.units,
             dst=dst_units,
             models=models,
