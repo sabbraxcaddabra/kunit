@@ -24,66 +24,64 @@
       {% endif %}
 
       <form id="convert-form" method="post" action="/convert" enctype="multipart/form-data" class="space-y-6">
-        <div class="grid lg:grid-cols-2 gap-6">
-          <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
-            <div class="space-y-2">
-              <label for="file_input" class="block text-sm font-medium text-slate-700">Файл (.k)</label>
-              <input type="file" id="file_input" name="file_input" accept=".k,text/plain" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
-              <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
-            </div>
-            <div class="space-y-2">
-              <label for="text_input" class="block text-sm font-medium text-slate-700">Или вставьте текст</label>
-              <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..." class="w-full h-56 rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
-            </div>
-            <input type="hidden" name="custom_transforms" value="{{ custom_transforms }}" />
+        <input type="hidden" name="custom_transforms" value="{{ custom_transforms }}" />
+
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-5">
+          <div class="space-y-2">
+            <label for="file_input" class="block text-sm font-medium text-slate-700">Файл (.k)</label>
+            <input type="file" id="file_input" name="file_input" accept=".k,text/plain" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
+            <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
           </div>
 
-          <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
-            <div class="grid md:grid-cols-[1fr_auto_1fr] items-end gap-3">
-              <div>
-                <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
-                {% set selected_src = selected_src or (units|first).key %}
-                <select name="src" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
-                  {% for u in units %}
-                  <option value="{{ u.key }}" {% if selected_src == u.key %}selected{% endif %}>{{ u.label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class="text-center text-slate-500 pb-2">→</div>
-              <div>
-                <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
-                {% set selected_dst = selected_dst or (units|last).key %}
-                <select name="dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
-                  {% for u in units %}
-                  <option value="{{ u.key }}" {% if selected_dst == u.key %}selected{% endif %}>{{ u.label }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-
+          <div class="grid md:grid-cols-[1fr_auto_1fr] items-end gap-3">
             <div>
-              <p class="block text-sm font-medium text-slate-700 mb-2">Модели</p>
-              {% set selected_models = selected_models or default_models %}
-              <div class="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
-                {% for m in models %}
-                <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50/80 hover:border-sky-300">
-                  <input type="checkbox" name="models" value="{{ m }}" {% if not selected_models or m in selected_models %}checked{% endif %} class="h-4 w-4 text-sky-600 border-slate-300 rounded" />
-                  <span class="text-sm text-slate-800">{{ m }}</span>
-                </label>
+              <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
+              {% set selected_src = selected_src or (units|first).key %}
+              <select name="src" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                {% for u in units %}
+                <option value="{{ u.key }}" {% if selected_src == u.key %}selected{% endif %}>{{ u.label }}</option>
                 {% endfor %}
-              </div>
+              </select>
             </div>
-
-            <div class="space-y-2">
-              <label for="out_name" class="block text-sm font-medium text-slate-700">Имя файла результата</label>
-              <input type="text" id="out_name" name="out_name" value="{{ out_name or 'converted.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
-            </div>
-
-            <div class="flex items-center gap-3 pt-2">
-              <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Конвертировать</button>
-              <p class="text-xs text-slate-500">Состояние формы сохраняется локально.</p>
+            <div class="text-center text-slate-500 pb-2">→</div>
+            <div>
+              <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
+              {% set selected_dst = selected_dst or (units|last).key %}
+              <select name="dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                {% for u in units %}
+                <option value="{{ u.key }}" {% if selected_dst == u.key %}selected{% endif %}>{{ u.label }}</option>
+                {% endfor %}
+              </select>
             </div>
           </div>
+
+          <div>
+            <p class="block text-sm font-medium text-slate-700 mb-2">Модели</p>
+            {% set selected_models = selected_models or default_models %}
+            <div class="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
+              {% for m in models %}
+              <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 bg-slate-50/80 hover:border-sky-300">
+                <input type="checkbox" name="models" value="{{ m }}" {% if not selected_models or m in selected_models %}checked{% endif %} class="h-4 w-4 text-sky-600 border-slate-300 rounded" />
+                <span class="text-sm text-slate-800">{{ m }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label for="out_name" class="block text-sm font-medium text-slate-700">Имя файла результата</label>
+            <input type="text" id="out_name" name="out_name" value="{{ out_name or 'converted.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Конвертировать</button>
+            <p class="text-xs text-slate-500">Состояние формы сохраняется локально.</p>
+          </div>
+        </div>
+
+        <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-3">
+          <label for="text_input" class="block text-sm font-medium text-slate-700">Или вставьте текст</label>
+          <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..." class="w-full min-h-[22rem] rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
         </div>
       </form>
     </div>
