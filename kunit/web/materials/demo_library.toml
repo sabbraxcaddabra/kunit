@@ -20,7 +20,7 @@ units = "mm-mg-us"
 payload = """*EOS_JWL_TITLE
 hmx
 $#   eosid         a         b        r1        r2      omeg        e0        vo
-        22     778.3     7.071       4.2       1.0       0.3      10.5       0.0
+        23     778.3     7.071       4.2       1.0       0.3      10.5       0.0
 """
 
 [[materials]]
