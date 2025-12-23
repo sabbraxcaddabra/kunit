@@ -6,8 +6,7 @@ units = "mm-mg-us"
 reference = "https://example.com/hexolite"
 comment = "Взрывяатое вещество октоген"
 tags = "взрывчатка, октоген"
-text = """
-*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+text = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
 hmx
 $#     mid        ro         d       pcj      beta         k         g      sigy
         22     1.891      9.11      42.0       0.0       0.0       0.0       0.0
@@ -21,8 +20,7 @@ units = "mm-mg-us"
 reference = "https://example.com/hexolite"
 comment = "Взрывяатое вещество октоген (УРС JWL)"
 tags = "взрывчатка, октоген"
-text = """
-*EOS_JWL_TITLE
+text = """*EOS_JWL_TITLE
 hmx
 $#   eosid         a         b        r1        r2      omeg        e0        vo
         22     778.3     7.071       4.2       1.0       0.3      10.5       0.0
