@@ -11,21 +11,58 @@ from kunit.models import SPECS_BY_NAME
 
 
 @dataclass(frozen=True)
-class MaterialRecord:
-    material_id: str
-    name: str
+class MaterialSection:
+    kind: str
     model: str
     units: str
     payload: str
+
+    def to_k(self) -> str:
+        return self.payload if self.payload.endswith("\n") else f"{self.payload}\n"
+
+
+@dataclass(frozen=True)
+class MaterialRecord:
+    material_id: str
+    name: str
+    sections: Sequence[MaterialSection]
     reference: str | None = None
     comment: str | None = None
     tags: Sequence[str] = field(default_factory=list)
     meta: Mapping[str, Any] = field(default_factory=dict)
     source: str | None = None
 
+    @property
+    def material(self) -> MaterialSection:
+        for section in self.sections:
+            if section.kind == "material":
+                return section
+        return self.sections[0]
+
+    @property
+    def eos(self) -> MaterialSection | None:
+        for section in self.sections:
+            if section.kind == "eos":
+                return section
+        return None
+
+    # Backwards-compatible accessors for existing templates/usages
+    @property
+    def model(self) -> str:
+        return self.material.model
+
+    @property
+    def units(self) -> str:
+        return self.material.units
+
+    @property
+    def payload(self) -> str:
+        return self.material.payload
+
     def to_k(self) -> str:
-        """Return .k text with a trailing newline for safe concatenation."""
-        return self.payload if self.payload.endswith("\n") else f"{self.payload}\n"
+        """Return .k text for all sections with trailing newline for concatenation."""
+
+        return "".join(section.to_k() for section in self.sections)
 
 
 class MaterialStore:
@@ -72,9 +109,11 @@ class MaterialStore:
 
         return [self._normalize_record(item, path) for item in materials]
 
-    def _normalize_record(self, raw: Mapping[str, Any], source_path: Path) -> MaterialRecord:
+    def _normalize_section(
+        self, raw: Mapping[str, Any], kind: str, source_path: Path
+    ) -> MaterialSection:
         if not isinstance(raw, Mapping):
-            raise ValueError(f"Material entry in {source_path} must be an object")
+            raise ValueError(f"Section '{kind}' in {source_path} must be an object")
 
         model = str(raw.get("model", "")).strip()
         if model not in SPECS_BY_NAME:
@@ -84,12 +123,20 @@ class MaterialStore:
         units = str(raw.get("units", "")).strip()
         if units not in BASE_SYSTEMS:
             raise ValueError(
-                f"Unknown units '{units}' for material '{model}' in {source_path}; known: {list(BASE_SYSTEMS)}"
+                f"Unknown units '{units}' for section '{kind}' in {source_path}; known: {list(BASE_SYSTEMS)}"
             )
 
         payload = raw.get("payload") or raw.get("text") or ""
         if not isinstance(payload, str) or not payload.strip():
-            raise ValueError(f"Material '{model}' in {source_path} must include payload text")
+            raise ValueError(
+                f"Section '{kind}' in {source_path} must include payload text"
+            )
+
+        return MaterialSection(kind=kind, model=model, units=units, payload=payload)
+
+    def _normalize_record(self, raw: Mapping[str, Any], source_path: Path) -> MaterialRecord:
+        if not isinstance(raw, Mapping):
+            raise ValueError(f"Material entry in {source_path} must be an object")
 
         material_id = str(raw.get("id") or raw.get("name") or source_path.stem)
 
@@ -115,12 +162,23 @@ class MaterialStore:
 
         meta = raw.get("meta") if isinstance(raw.get("meta"), Mapping) else {}
 
+        sections: List[MaterialSection] = []
+
+        if "material" in raw:
+            sections.append(self._normalize_section(raw["material"], "material", source_path))
+        else:
+            sections.append(self._normalize_section(raw, "material", source_path))
+
+        if "eos" in raw:
+            sections.append(self._normalize_section(raw["eos"], "eos", source_path))
+
+        if not sections:
+            raise ValueError(f"Material '{material_id}' in {source_path} must define at least one section")
+
         return MaterialRecord(
             material_id=material_id,
             name=name,
-            model=model,
-            units=units,
-            payload=payload,
+            sections=tuple(sections),
             reference=reference,
             comment=comment,
             tags=list(tags),

@@ -149,13 +149,14 @@ def create_app() -> Flask:
     def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
         blocks = []
         for record in records:
-            converted = convert_string(
-                record.payload,
-                src=record.units,
-                dst=dst_units,
-                models=[record.model],
-            )
-            blocks.append(converted if converted.endswith("\n") else f"{converted}\n")
+            for section in record.sections:
+                converted = convert_string(
+                    section.payload,
+                    src=section.units,
+                    dst=dst_units,
+                    models=[section.model],
+                )
+                blocks.append(converted if converted.endswith("\n") else f"{converted}\n")
         return "".join(blocks)
 
     @app.post("/materials/export")
