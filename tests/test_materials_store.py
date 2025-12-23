@@ -93,3 +93,49 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
     assert format_lsdyna_10(1.2 * 1000) in converted  # density
     assert format_lsdyna_10(3.0 * 1e9) in converted  # pressure in MAT
     assert format_lsdyna_10(10.0 * 1e9) in converted  # pressure in EOS
+
+
+def test_multi_section_material_conversion(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        '''
+[[materials]]
+id = "hmx"
+name = "HMX"
+
+[materials.material]
+model = "mat-he-burn"
+units = "mm-mg-us"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+hmx
+$#     mid        ro         d       pcj      beta         k         g      sigy
+        22     1.891      9.11      42.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-jwl"
+units = "mm-mg-us"
+payload = """*EOS_JWL_TITLE
+hmx
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+        22     778.3     7.071       4.2       1.0       0.3      10.5       0.0
+"""
+''',
+    )
+
+    store = MaterialStore(tmp_path)
+    material = store.list_materials()[0]
+
+    assert material.models == ["mat-he-burn", "eos-jwl"]
+
+    converted = convert_string(
+        material.to_k(),
+        src=material.units,
+        dst="m-kg-s",
+        models=material.models,
+    )
+
+    assert "*MAT_HIGH_EXPLOSIVE_BURN_TITLE" in converted
+    assert "*EOS_JWL_TITLE" in converted
+    assert format_lsdyna_10(42.0 * 1e9) in converted  # pressure in MAT
+    assert format_lsdyna_10(778.3 * 1e9) in converted  # pressure in EOS
