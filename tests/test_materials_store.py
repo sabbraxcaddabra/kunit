@@ -1,9 +1,9 @@
-from pathlib import Path
 import textwrap
+from pathlib import Path
 
 from kunit.api import convert_string
-from kunit.core.fixed import format_lsdyna_10
-from kunit.materials_store import MaterialStore
+from kunit.core.fixed import format_lsdyna_10, join_fixed
+from kunit.materials_store import MaterialStore, export_materials
 
 
 def _write_material(tmp_path: Path, content: str) -> Path:
@@ -139,3 +139,54 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
     assert "*EOS_JWL_TITLE" in converted
     assert format_lsdyna_10(42.0 * 1e9) in converted  # pressure in MAT
     assert format_lsdyna_10(778.3 * 1e9) in converted  # pressure in EOS
+
+
+def test_export_materials_rewrites_identifiers(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        textwrap.dedent(
+            '''
+            [[materials]]
+            id = "alpha"
+            name = "Alpha"
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            text = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+                    10       1.2       2.0       3.0       0.0       0.0       0.0       4.0
+            *EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+                    10      10.0      20.0       1.0       2.0       3.0      60.0       0.5
+            """
+
+            [[materials]]
+            id = "beta"
+            name = "Beta"
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            text = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+                    10       1.5       2.5       3.5       0.0       0.0       0.0       4.5
+            *EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+                    10      11.0      21.0       1.5       2.5       3.5      61.0       0.8
+            """
+            '''
+        ),
+    )
+
+    store = MaterialStore(tmp_path)
+    materials = store.list_materials()
+
+    exported = export_materials(materials)
+    lines = exported.splitlines()
+
+    mat1 = lines.index("*MAT_HIGH_EXPLOSIVE_BURN")
+    mat2 = lines.index("*MAT_HIGH_EXPLOSIVE_BURN", mat1 + 1)
+
+    assert lines[mat1 + 2][:10].strip() == "1"
+    assert lines[mat2 + 2][:10].strip() == "2"
+    assert "*EOS_JWL" in lines[mat1 + 3]
+    assert lines[mat1 + 5][:10].strip() == "1"
+    assert "*EOS_JWL" in lines[mat2 + 3]
+    assert lines[mat2 + 5][:10].strip() == "2"

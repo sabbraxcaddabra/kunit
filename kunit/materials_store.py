@@ -6,6 +6,9 @@ from typing import Any, Iterable, List, Mapping, Sequence
 
 import tomllib
 
+from kunit.core import engine
+from kunit.core.engine import KeywordSpec
+from kunit.core.fixed import format_lsdyna_10, join_fixed, split_fixed
 from kunit.core.units import BASE_SYSTEMS
 from kunit.models import ALL_SPECS, SPECS_BY_NAME
 
@@ -245,4 +248,79 @@ class MaterialStore:
 def export_materials(materials: Sequence[MaterialRecord]) -> str:
     """Concatenate materials into a single .k document."""
 
-    return "".join(m.to_k() for m in materials)
+    out: List[str] = []
+
+    for idx, material in enumerate(materials, start=1):
+        text = material.to_k()
+        for spec in _identifier_specs(material):
+            field_name = _identifier_field(spec)
+            if field_name:
+                text = _rewrite_identifier(text, spec, field_name, idx)
+        out.append(text)
+
+    return "".join(out)
+
+
+def _identifier_specs(material: MaterialRecord) -> List[KeywordSpec]:
+    specs: List[KeywordSpec] = []
+    for name in material.models:
+        spec = SPECS_BY_NAME.get(name)
+        if spec:
+            specs.append(spec)
+    return specs
+
+
+def _identifier_field(spec: KeywordSpec) -> str | None:
+    for card in spec.cards:
+        for field in card:
+            if field in {"mid", "eosid"}:
+                return field
+    return None
+
+
+def _rewrite_identifier(payload: str, spec: KeywordSpec, field_name: str, new_id: int) -> str:
+    lines = payload.splitlines(keepends=True)
+    out: List[str] = []
+
+    i = 0
+    prefix = spec.keyword_prefix.upper()
+    while i < len(lines):
+        line = lines[i]
+        if line.lstrip().upper().startswith(prefix):
+            block = [line]
+            i += 1
+            while i < len(lines) and not lines[i].lstrip().startswith("*"):
+                block.append(lines[i])
+                i += 1
+            out.extend(_rewrite_block_identifier(block, spec, field_name, new_id))
+            continue
+
+        out.append(line)
+        i += 1
+
+    rewritten = "".join(out)
+    return rewritten if rewritten.endswith("\n") else f"{rewritten}\n"
+
+
+def _rewrite_block_identifier(
+    block: List[str], spec: KeywordSpec, field_name: str, new_id: int
+) -> List[str]:
+    data_idxs = engine._extract_data_lines(block, n=len(spec.cards))  # type: ignore[attr-defined]
+    if not data_idxs:
+        return block
+
+    out = block[:]
+
+    for line_i, card_fields in zip(data_idxs, spec.cards):
+        if field_name not in card_fields:
+            continue
+        fields = split_fixed(block[line_i])
+        new_fields: List[str] = []
+        for name, raw in zip(card_fields, fields):
+            if name == field_name:
+                new_fields.append(format_lsdyna_10(new_id))
+            else:
+                new_fields.append(raw.strip())
+        out[line_i] = join_fixed(new_fields)
+
+    return out
