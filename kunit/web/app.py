@@ -8,21 +8,11 @@ from typing import Optional, Sequence
 from flask import Flask, render_template, request, send_file
 
 from kunit.api import convert_string, get_unit_descriptors, get_unit_keys, list_models
-from kunit.materials_store import MaterialRecord, MaterialStore
+from kunit.materials_store import MaterialRecord, MaterialStore, convert_materials
 
 
 def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
-    blocks = []
-    for record in records:
-        models = list(record.models) if record.models else [record.model]
-        converted = convert_string(
-            record.to_k(),
-            src=record.units,
-            dst=dst_units,
-            models=models,
-        )
-        blocks.append(converted if converted.endswith("\n") else f"{converted}\n")
-    return "".join(blocks)
+    return convert_materials(records, dst_units)
 
 
 def create_app() -> Flask:
