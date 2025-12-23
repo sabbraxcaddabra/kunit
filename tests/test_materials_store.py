@@ -1,4 +1,5 @@
 from pathlib import Path
+import textwrap
 
 from kunit.api import convert_string
 from kunit.core.fixed import format_lsdyna_10
@@ -10,6 +11,10 @@ def _write_material(tmp_path: Path, content: str) -> Path:
     path = tmp_path / "library.toml"
     path.write_text(content, encoding="utf-8")
     return path
+
+
+def _fixed_line(values):
+    return join_fixed([format_lsdyna_10(v) for v in values])
 
 
 def test_tags_parsed_from_comma_separated_string(tmp_path: Path):
