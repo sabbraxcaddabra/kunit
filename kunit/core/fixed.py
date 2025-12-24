@@ -40,6 +40,9 @@ def format_lsdyna_10(v: float) -> str:
     Format numeric value to fit into 10 characters.
     Prefers compact 'g', then 'E'. Last resort: truncate.
     """
+    if v == 0:
+        return "0"
+
     if v == 0.0:
         return "0.0"
 
