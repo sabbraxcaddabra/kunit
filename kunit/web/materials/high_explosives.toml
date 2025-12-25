@@ -1,0 +1,74 @@
+[[materials]]
+id = "hmx"
+name = "Октоген"
+reference = "https://example.com/hexolite"
+comment = "Взрывяатое вещество октоген"
+tags = "взрывчатка, октоген"
+
+[materials.material]
+model = "mat-he-burn"
+units = "mm-mg-us"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+hmx
+$#     mid        ro         d       pcj      beta         k         g      sigy
+        22     1.891      9.11      42.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-jwl"
+units = "mm-mg-us"
+payload = """*EOS_JWL_TITLE
+hmx
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+        23     778.3     7.071       4.2       1.0       0.3      10.5       0.0
+"""
+
+[[materials]]
+id = "tnt"
+name = "Тротил"
+reference = "https://example.com/hexolite"
+comment = "Взрывяатое вещество тротил"
+tags = "взрывчатка, тротил"
+
+[materials.material]
+model = "mat-he-burn"
+units = "mm-mg-us"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+tnt
+$#     mid        ro         d       pcj      beta         k         g      sigy
+       111      1.63      6.57      19.3       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-jwl"
+units = "mm-mg-us"
+payload = """*EOS_JWL_TITLE
+tnt
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+      1111     371.2     3.231      4.15      0.95       0.3       7.0       0.0
+"""
+
+[[materials]]
+id = "comp_a3"
+name = "Comp A-3 (А-IX-1)"
+reference = "https://example.com/hexolite"
+comment = "Взрывяатое вещество Comp A-3, аналог отечественного (А-IX-1)"
+tags = "взрывчатка, comp a-3"
+
+[materials.material]
+model = "mat-he-burn"
+units = "mm-mg-us"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+comp a
+$#     mid        ro         d       pcj      beta         k         g      sigy
+       222      1.65       8.3      30.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-jwl"
+units = "mm-mg-us"
+payload = """*EOS_JWL_TITLE
+comp a
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+       222     611.3     10.65       4.4       1.2      0.32       8.9       0.0
+"""
