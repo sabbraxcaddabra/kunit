@@ -58,10 +58,18 @@ def create_app() -> Flask:
         unit_options = get_unit_descriptors()
         unit_labels = {u.key: u.label for u in unit_options}
         materials = materials_store.list_materials()
+        material_models = sorted(
+            {section.model for m in materials for section in m.sections if section.kind == "material"}
+        )
+        eos_models = sorted(
+            {section.model for m in materials for section in m.sections if section.kind == "eos"}
+        )
         base_ctx = dict(
             units=unit_options,
             unit_labels=unit_labels,
             materials=materials,
+            material_models=material_models,
+            eos_models=eos_models,
         )
         base_ctx.update(kwargs)
         return base_ctx
