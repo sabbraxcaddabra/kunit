@@ -124,6 +124,14 @@
             </div>
 
             <div id="materials-empty" class="hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-600 px-4 py-6 text-sm text-center">По текущим фильтрам ничего не найдено.</div>
+
+            <div id="materials-pagination" class="hidden items-center justify-between gap-3 flex-wrap rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
+              <div class="flex items-center gap-2">
+                <button type="button" id="materials-prev" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-40 disabled:cursor-not-allowed">Назад</button>
+                <button type="button" id="materials-next" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-40 disabled:cursor-not-allowed">Вперед</button>
+              </div>
+              <span id="materials-page-info" class="text-xs text-slate-500">Страница 1</span>
+            </div>
           </div>
 
           <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
@@ -219,6 +227,13 @@
         const emptyState = document.getElementById('materials-empty');
         const cards = materialsList ? Array.from(materialsList.querySelectorAll('.material-card')) : [];
         const selectionForm = document.getElementById('materials-form');
+        const pagination = document.getElementById('materials-pagination');
+        const prevBtn = document.getElementById('materials-prev');
+        const nextBtn = document.getElementById('materials-next');
+        const pageInfo = document.getElementById('materials-page-info');
+        const PAGE_SIZE = 10;
+        let filteredCards = cards.slice();
+        let currentPage = 1;
 
         function setCollapsed(collapsed) {
           if (!materialsPanel) return;
@@ -239,14 +254,15 @@
           });
         });
 
-        const applyFilters = () => {
+        const applyFilters = (resetPage = true) => {
           const nameQuery = (searchInput?.value || '').toLowerCase().trim();
           const keywordTokens = (keywordsInput?.value || '')
             .toLowerCase()
             .split(/[,\\s]+/)
             .filter(Boolean);
           const selectedModel = modelFilter?.value || '';
-          let visible = 0;
+          filteredCards = [];
+          let totalVisible = 0;
 
           cards.forEach((card) => {
             const name = card.dataset.name || '';
@@ -270,16 +286,27 @@
                 show = eosModel === selectedModel.replace('eos:', '');
               }
             }
-            card.classList.toggle('hidden', !show);
-            if (show) visible += 1;
+            card.dataset.visible = show ? 'true' : 'false';
+            if (show) {
+              totalVisible += 1;
+              filteredCards.push(card);
+            }
           });
 
+          if (resetPage) {
+            currentPage = 1;
+          }
+          renderPage();
+
           if (visibleCount) {
-            visibleCount.textContent = `Показано: ${visible} из ${cards.length}`;
+            const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+            visibleCount.textContent = filteredCards.length
+              ? `Найдено: ${filteredCards.length} · Страница ${currentPage}/${totalPages}`
+              : 'Ничего не найдено';
           }
 
           if (emptyState) {
-            emptyState.classList.toggle('hidden', visible !== 0);
+            emptyState.classList.toggle('hidden', filteredCards.length !== 0);
           }
         };
 
@@ -287,10 +314,59 @@
           el?.addEventListener('input', applyFilters);
           el?.addEventListener('change', applyFilters);
         });
-        applyFilters();
+        applyFilters(false);
+
+        function renderPage() {
+          const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+          currentPage = Math.min(Math.max(currentPage, 1), totalPages);
+          const start = (currentPage - 1) * PAGE_SIZE;
+          const end = start + PAGE_SIZE;
+
+          cards.forEach((card) => {
+            if (card.dataset.visible !== 'true') {
+              card.classList.add('hidden');
+              return;
+            }
+            const idx = filteredCards.indexOf(card);
+            const onPage = idx >= start && idx < end;
+            card.classList.toggle('hidden', !onPage);
+          });
+
+          if (pagination) {
+            pagination.classList.toggle('hidden', filteredCards.length <= PAGE_SIZE);
+          }
+          if (pageInfo) {
+            const pages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+            pageInfo.textContent = `Страница ${Math.min(currentPage, pages)} из ${pages}`;
+          }
+          if (prevBtn) prevBtn.disabled = currentPage <= 1;
+          if (nextBtn) nextBtn.disabled = currentPage >= Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
+        }
+
+        prevBtn?.addEventListener('click', () => {
+          currentPage -= 1;
+          renderPage();
+        });
+
+        nextBtn?.addEventListener('click', () => {
+          currentPage += 1;
+          renderPage();
+        });
 
         selectionForm?.addEventListener('submit', () => {
           setCollapsed(true);
+        });
+
+        selectionForm?.addEventListener('keydown', (event) => {
+          const target = event.target;
+          const isFilterField =
+            target === searchInput ||
+            target === keywordsInput ||
+            target === modelFilter ||
+            (target instanceof HTMLInputElement && target.type === 'search');
+          if (event.key === 'Enter' && isFilterField) {
+            event.preventDefault();
+          }
         });
       })();
     </script>
