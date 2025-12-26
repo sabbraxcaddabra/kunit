@@ -67,18 +67,24 @@ def parse_custom_transforms(raw: Mapping[str, Any]) -> CustomTransformMap:
     spec_map: MutableMapping[str, MutableMapping[str, FieldTransform]] = {}
     for spec_name, fields in raw.items():
         if not isinstance(fields, Mapping):
-            raise ValueError(f"Custom transforms for '{spec_name}' must be a mapping of fields")
+            raise ValueError(
+                f"Custom transforms for '{spec_name}' must be a mapping of fields"
+            )
         field_map: MutableMapping[str, FieldTransform] = {}
         for field_name, cfg in fields.items():
             if not isinstance(cfg, Mapping):
-                raise ValueError(f"Transform for field '{field_name}' must be an object")
+                raise ValueError(
+                    f"Transform for field '{field_name}' must be an object"
+                )
             power = float(cfg.get("power", 1.0))
             multiplier = float(cfg.get("multiplier", 1.0))
             offset = float(cfg.get("offset", 0.0))
             dim_value = cfg.get("dim")
             dim = _parse_dim(dim_value) if dim_value is not None else None
             scale_dim_value = cfg.get("scale_dim")
-            scale_dim = _parse_dim(scale_dim_value) if scale_dim_value is not None else None
+            scale_dim = (
+                _parse_dim(scale_dim_value) if scale_dim_value is not None else None
+            )
             scale_dim_field = cfg.get("scale_dim_field")
             if scale_dim_field is not None and not isinstance(scale_dim_field, str):
                 raise ValueError("scale_dim_field must be a string when provided")
@@ -86,7 +92,9 @@ def parse_custom_transforms(raw: Mapping[str, Any]) -> CustomTransformMap:
             if scale_power_field is not None and not isinstance(scale_power_field, str):
                 raise ValueError("scale_power_field must be a string when provided")
             scale_power_value = cfg.get("scale_power")
-            scale_power = float(scale_power_value) if scale_power_value is not None else None
+            scale_power = (
+                float(scale_power_value) if scale_power_value is not None else None
+            )
             field_map[field_name] = FieldTransform(
                 power=power,
                 multiplier=multiplier,
@@ -174,4 +182,3 @@ class KunitConverter:
             dst=self._dst_u,
             custom_transforms=self._transforms,
         )
-

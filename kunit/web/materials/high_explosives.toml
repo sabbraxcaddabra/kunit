@@ -72,3 +72,34 @@ comp a
 $#   eosid         a         b        r1        r2      omeg        e0        vo
        222     611.3     10.65       4.4       1.2      0.32       8.9       0.0
 """
+
+[[materials]]
+id = "tnt(i&g)"
+name = "Тротил (модель кинетики Ли-Тарвера)"
+reference = "https://example.com/hexolite"
+comment = "Взрывчатое вещество тротил"
+tags = "взрывчатка, тротил"
+
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+tnt
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+        11      1.63       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
+tnt
+$#   eosid         a         b       xp1       xp2      frer         g        r1
+        11     3.712  0.032306      4.15      0.95     0.2223.00000E-6     17.98
+$#      r2        r3        r5        r6     fmxig      freq     grow1        em
+    -0.9311.22653E-5       6.2       3.1       1.0      50.0       0.0       0.0
+$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
+       0.0       0.01.00000E-52.17200E-5       4.0       0.0      0.07     288.0
+$#   grow2       ar2       es2        en     fmxgr     fmngr
+      40.0     0.667     0.222       1.2       1.0       0.0
+"""

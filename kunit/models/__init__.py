@@ -4,10 +4,12 @@ from .eos_jwl import SPEC as EOS_JWL
 from .eos_jwlb import SPEC as EOS_JWLB
 from .mat_high_explosive_burn import SPEC as MAT_HE_BURN
 from .mat_johnson_cook import SPEC as MAT_JC
+from .mat_null import SPEC as MAT_NULL
 
 # Keep a stable order for CLI/UI display
 ALL_SPECS = [
     MAT_JC,
+    MAT_NULL,
     EOS_GRUNEISEN,
     EOS_JWL,
     EOS_JWLB,
