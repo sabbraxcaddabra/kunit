@@ -103,3 +103,175 @@ $#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
 $#   grow2       ar2       es2        en     fmxgr     fmngr
       40.0     0.667     0.222       1.2       1.0       0.0
 """
+
+[[materials]]
+id = "rdx"
+name = "RDX"
+reference = ""
+comment = "Взрывчатое вещество гексоген"
+tags = "взрывчатка, гексоген"
+
+[materials.material]
+model = "mat-he-burn"
+units = "cm-g-us"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+RDX
+$#     mid        ro         d       pcj      beta         k         g      sigy
+        22      1.65      0.83       0.3       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-jwl"
+units = "cm-g-us"
+payload = """*EOS_JWL_TITLE
+RDX
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+        22  9.890848 0.1111902     5.167    1.0458  0.396143     0.094       0.0
+"""
+
+[[materials]]
+id = "pbx-9501"
+name = "PBX 9501"
+reference = ""
+comment = "Взрывчатое вещество пластит"
+tags = "взрывчатка, пластит"
+
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+pbx 9501
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+        91       1.8       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
+pbx 9501
+$#   eosid         a         b       xp1       xp2      frer         g        r1
+        91    16.689    0.5969       5.9       2.1     0.6674.50000E-6    7320.0
+$#      r2        r3        r5        r6     fmxig      freq     grow1        em
+ -0.0526542.46560E-5      14.1      1.41       0.31.40000E11     130.0       2.0
+$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
+     0.227     0.6671.00000E-52.78060E-5      20.0       0.0     0.095     288.0
+$#   grow2       ar2       es2        en     fmxgr     fmngr
+     400.0       1.0     0.333       2.0       0.5       0.5
+"""
+
+[[materials]]
+id = "pbxn-109"
+name = "PBXN-109"
+reference = ""
+comment = "Взрывчатое вещество PBXN-109"
+tags = "взрывчатка, pbxn-109"
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
+PBXN-109
+$#   eosid         a         b       xp1       xp2      frer         g        r1
+        92    13.413    0.0327       6.0       2.0    0.66672.00000E-6    8817.0
+$#      r2        r3        r5        r6     fmxig      freq     grow1        em
+   -0.03551.94000E-5      15.0      1.41      0.22    6700.0     403.5       2.0
+$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
+    0.6667     0.2221.00000E-52.50000E-5       9.0      0.02     0.102     298.0
+$#   grow2       ar2       es2        en     fmxgr     fmngr
+     230.0       1.0     0.333       3.0       0.5       0.0
+"""
+
+[[materials]]
+id = "jh-2"
+name = "JH-2"
+reference = ""
+comment = "Взрывчатое вещество JH-2"
+tags = "взрывчатка, jh-2"
+
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+jh2
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+      1111      1.72       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
+jh2
+$#   eosid         a         b       xp1       xp2      frer         g        r1
+      1111     6.125    0.1395       4.5       1.4     0.6672.50000E-6     310.0
+$#      r2        r3        r5        r6     fmxig      freq     grow1        em
+ -0.0327852.22000E-5      11.3      1.13     0.022   4000000     140.0       2.0
+$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
+     0.329     0.6671.00000E-52.48700E-5       7.0     0.022      0.09     298.0
+$#   grow2       ar2       es2        en     fmxgr     fmngr
+    1000.0     0.333     0.067       3.0       1.0       0.0
+"""
+
+[[materials]]
+id = "ultrafine-tatb"
+name = "Ultrafine TATB"
+reference = ""
+comment = "Взрывчатое вещество ультрадисперсный ТАТБ"
+tags = "взрывчатка, татб"
+
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+ultrafine tatb
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+      1112       1.8       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
+ultrafine tatb
+$#   eosid         a         b       xp1       xp2      frer         g        r1
+      1112  12.05026  0.602513       6.2       2.2     0.6675.00000E-6    632.07
+$#      r2        r3        r5        r6     fmxig      freq     grow1        em
+  -0.044722.22000E-5      11.3      1.13     0.071   4000000    2200.0       2.0
+$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
+     0.667       1.01.00000E-52.48700E-5       7.0      0.22     0.069     298.0
+$#   grow2       ar2       es2        en     fmxgr     fmngr
+      60.0     0.667     0.667       1.0       1.0       0.8
+"""
+
+[[materials]]
+id = "lx-17"
+name = "LX-17"
+reference = ""
+comment = "Взрывчатое вещество композит LX-17"
+tags = "взрывчатка, композит"
+
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+lx17
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+      1113     1.905       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
+lx17
+$#   eosid         a         b       xp1       xp2      frer         g        r1
+      1113   14.8105    0.6379       6.2       2.2     0.6675.00000E-6     778.1
+$#      r2        r3        r5        r6     fmxig      freq     grow1        em
+  -0.050312.22000E-5      11.3      1.13      0.02   4000000    4600.0       3.0
+$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
+     0.667       1.01.00000E-52.48700E-5       7.0      0.22     0.069     298.0
+$#   grow2       ar2       es2        en     fmxgr     fmngr
+      30.0     0.667     0.667       1.0       0.8       0.8
+"""
+
