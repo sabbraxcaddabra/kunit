@@ -2,7 +2,7 @@
 id = "hmx"
 name = "Октоген"
 reference = "https://example.com/hexolite"
-comment = "Взрывяатое вещество октоген"
+comment = "Взрывчатое вещество октоген"
 tags = "взрывчатка, октоген"
 
 [materials.material]
@@ -27,7 +27,7 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 id = "tnt"
 name = "Тротил"
 reference = "https://example.com/hexolite"
-comment = "Взрывяатое вещество тротил"
+comment = "Взрывчатое вещество тротил"
 tags = "взрывчатка, тротил"
 
 [materials.material]
@@ -52,7 +52,7 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 id = "comp_a3"
 name = "Comp A-3 (А-IX-1)"
 reference = "https://example.com/hexolite"
-comment = "Взрывяатое вещество Comp A-3, аналог отечественного (А-IX-1)"
+comment = "Взрывчатое вещество Comp A-3, аналог отечественного (А-IX-1)"
 tags = "взрывчатка, comp a-3"
 
 [materials.material]
@@ -130,8 +130,8 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 """
 
 [[materials]]
-id = "pbx-9501"
-name = "PBX 9501"
+id = "pbx-9501(i&g)"
+name = "PBX 9501 (модель кинетики Ли-Тарвера)"
 reference = ""
 comment = "Взрывчатое вещество пластит"
 tags = "взрывчатка, пластит"
@@ -161,8 +161,8 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 """
 
 [[materials]]
-id = "pbxn-109"
-name = "PBXN-109"
+id = "pbxn-109(i&g)"
+name = "PBXN-109 (модель кинетики Ли-Тарвера)"
 reference = ""
 comment = "Взрывчатое вещество PBXN-109"
 tags = "взрывчатка, pbxn-109"
@@ -183,10 +183,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 """
 
 [[materials]]
-id = "jh-2"
-name = "JH-2"
+id = "jh-2(i&g)"
+name = "JH-2 (модель кинетики Ли-Тарвера)"
 reference = ""
-comment = "Взрывчатое вещество JH-2"
+comment = "Взрывчатое вещество JH-2, аналог отечественного А-IX-1"
 tags = "взрывчатка, jh-2"
 
 [materials.material]
@@ -214,10 +214,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 """
 
 [[materials]]
-id = "ultrafine-tatb"
-name = "Ultrafine TATB"
+id = "ultrafine-tatb(i&g)"
+name = "Ultrafine TATB (модель кинетики Ли-Тарвера)"
 reference = ""
-comment = "Взрывчатое вещество ультрадисперсный ТАТБ"
+comment = "Взрывчатое вещество мелкодисперсный ТАТБ"
 tags = "взрывчатка, татб"
 
 [materials.material]
@@ -245,11 +245,11 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 """
 
 [[materials]]
-id = "lx-17"
-name = "LX-17"
+id = "lx-17(i&g)"
+name = "LX-17 (модель кинетики Ли-Тарвера)"
 reference = ""
 comment = "Взрывчатое вещество композит LX-17"
-tags = "взрывчатка, композит"
+tags = "взрывчатка, композит на основе татб, lx17"
 
 [materials.material]
 model = "mat-null"

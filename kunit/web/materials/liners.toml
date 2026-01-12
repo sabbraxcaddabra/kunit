@@ -1,0 +1,163 @@
+[[materials]]
+id = "cu-ofhc(jc)"
+name = "Медь"
+reference = "https://example.com/hexolite"
+comment = "Отожженная медь, аналог отечественной меди М1"
+tags = "медь, кумулятивная облицовки"
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+CU-OFHC
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        11      8.96      46.0     123.3 0.3406467       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+      0.09     0.292      0.31     0.025      1.09    1356.0     293.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+3.83000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5  c2/p/xnp      erod     efmin    numint         _         _    dmodel
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+CU-OFHC
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        11      3.94     1.489       0.0       0.0      2.02       0.0       0.0
+$#      v0         -      lcid
+       0.0                   0
+"""
+
+[[materials]]
+id = "ta(jc)"
+name = "Тантал"
+reference = "https://example.com/hexolite"
+comment = "Чистый тантал"
+tags = "тантал, кумулятивная облицовки, ударное ядро"
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+Ta
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        12     16.69      72.0     190.3      0.36       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+      0.22     0.520     0.325     0.055     0.475    3250.0     298.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+1.53000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5  c2/p/xnp      erod     efmin    numint         _         _    dmodel
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+Ta
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        12      3.41     1.200       0.0       0.0      1.67       0.0       0.0
+$#      v0         -      lcid
+       0.0                   0
+"""
+
+[[materials]]
+id = "ta-w2.5(jc)"
+name = "Тантал/Вольфрам (2.5%)"
+reference = "https://example.com/hexolite"
+comment = "Сплав тантала с вольфрамом. Содержание вольфрама 2.5%. Уравнение состояния приведено для чистого тантала до появления новых данных"
+tags = "танталовый сплав, кумулятивная облицовки, ударное ядро"
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+Ta-2.5W
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        13     16.69      72.0       190      0.36       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+     0.245     0.493      0.58     0.065      1.04    3250.0     294.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+1.53000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5  c2/p/xnp      erod     efmin    numint         _         _    dmodel
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+Ta
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        12      3.41     1.200       0.0       0.0      1.67       0.0       0.0
+$#      v0         -      lcid
+       0.0                   0
+"""
+[[materials]]
+id = "ta-w5(jc)"
+name = "Тантал/Вольфрам (5%)"
+reference = "https://example.com/hexolite"
+comment = "Сплав тантала с вольфрамом. Содержание вольфрама 5%. Уравнение состояния приведено для сплава тантала с вольфрамом (содержание вольфрама 10%) до появления новых данных"
+tags = "танталовый сплав, кумулятивная облицовки, ударное ядро"
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+Ta-5W
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        14     16.69      72.0       190      0.36       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+       0.4     0.875     0.525    0.0363      0.55    3250.0     298.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+1.53000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5  c2/p/xnp      erod     efmin    numint         _         _    dmodel
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+Ta-10W
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        13      3.46     1.200       0.0       0.0      1.67       0.0       0.0
+$#      v0         -      lcid
+       0.0                   0
+"""
+
+[[materials]]
+id = "ta-w10(jc)"
+name = "Тантал/Вольфрам (10%)"
+reference = "https://example.com/hexolite"
+comment = "Сплав тантала с вольфрамом. Содержание вольфрама 10%."
+tags = "танталовый сплав, кумулятивная облицовки, ударное ядро"
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+Ta-10W
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        15     16.69      72.0       190      0.36       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+      0.47         1     0.425      0.03       0.6    3250.0     298.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+1.53000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5  c2/p/xnp      erod     efmin    numint         _         _    dmodel
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+Ta-10W
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        13      3.46     1.200       0.0       0.0      1.67       0.0       0.0
+$#      v0         -      lcid
+       0.0                   0
+"""
