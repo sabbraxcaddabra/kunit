@@ -5,18 +5,70 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
-from flask import Flask, render_template, request, send_file
+from flask import Flask, redirect, render_template, request, send_file
+from flask_babel import Babel, get_locale, gettext as _
 
 from kunit.api import convert_string, get_unit_descriptors, get_unit_keys, list_models
+from kunit.core.units import UnitDescriptor
 from kunit.materials_store import MaterialRecord, MaterialStore, convert_materials
+from kunit.web.i18n import compile_translations
 
 
 def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
     return convert_materials(records, dst_units)
 
+_PRESSURE_UNIT_EN = {
+    "Па": "Pa",
+    "кПа": "kPa",
+    "МПа": "MPa",
+    "ГПа": "GPa",
+    "Мбар": "Mbar",
+}
+
+
+def _localize_unit_descriptors(
+    units: Sequence[UnitDescriptor], lang: str
+) -> List[UnitDescriptor]:
+    if lang != "en":
+        return list(units)
+
+    localized: List[UnitDescriptor] = []
+    for unit in units:
+        pressure_unit = _PRESSURE_UNIT_EN.get(unit.pressure_unit, unit.pressure_unit)
+        localized.append(
+            UnitDescriptor(
+                key=unit.key,
+                label=f"{unit.key} — {pressure_unit}",
+                pressure_unit=pressure_unit,
+            )
+        )
+    return localized
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.config.setdefault("BABEL_DEFAULT_LOCALE", "ru")
+
+    supported_languages = ("ru", "en")
+
+    package_root = Path(__file__).resolve().parent
+    compiled_translations_root = Path(app.instance_path) / "translations"
+    compile_translations(
+        src_root=package_root / "translations",
+        dst_root=compiled_translations_root,
+        locales=("en",),
+    )
+    app.config.setdefault("BABEL_TRANSLATION_DIRECTORIES", str(compiled_translations_root))
+
+    def select_locale() -> str:
+        lang = request.cookies.get("lang")
+        if lang in supported_languages:
+            return lang
+        best = request.accept_languages.best_match(list(supported_languages))
+        return best or "ru"
+
+    Babel(app, locale_selector=select_locale)
+
     materials_root = Path(__file__).resolve().parent / "materials"
     materials_store = MaterialStore(materials_root)
 
@@ -40,8 +92,20 @@ def create_app() -> Flask:
             after_snippet="\n".join(after_lines[:max_lines]),
         )
 
+    @app.context_processor
+    def _inject_i18n():
+        lang = str(get_locale())
+        return dict(
+            lang=lang,
+            languages=[
+                ("ru", "RU"),
+                ("en", "EN"),
+            ],
+        )
+
     def _index_context(**kwargs):
-        unit_options = get_unit_descriptors()
+        lang = str(get_locale())
+        unit_options = _localize_unit_descriptors(get_unit_descriptors(), lang)
         models = list_models()
         unit_labels = {u.key: u.label for u in unit_options}
         base_ctx = dict(
@@ -55,7 +119,8 @@ def create_app() -> Flask:
         return base_ctx
 
     def _materials_context(**kwargs):
-        unit_options = get_unit_descriptors()
+        lang = str(get_locale())
+        unit_options = _localize_unit_descriptors(get_unit_descriptors(), lang)
         unit_labels = {u.key: u.label for u in unit_options}
         materials = materials_store.list_materials()
         material_models = sorted(
@@ -73,6 +138,20 @@ def create_app() -> Flask:
         )
         base_ctx.update(kwargs)
         return base_ctx
+
+    @app.post("/lang")
+    def set_language():
+        lang = request.form.get("lang", type=str) or "ru"
+        if lang not in supported_languages:
+            lang = "ru"
+
+        next_url = request.form.get("next", type=str) or "/"
+        if not next_url.startswith("/"):
+            next_url = "/"
+
+        resp = redirect(next_url)
+        resp.set_cookie("lang", lang, max_age=60 * 60 * 24 * 365, samesite="Lax")
+        return resp
 
     @app.get("/")
     def index():
@@ -112,7 +191,7 @@ def create_app() -> Flask:
                 render_template(
                     "index.html",
                     **_index_context(
-                        error_msg="Нужно вставить текст или выбрать файл",
+                        error_msg=_("Нужно вставить текст или выбрать файл"),
                         selected_src=src,
                         selected_dst=dst,
                         custom_transforms=custom_transforms,
@@ -134,7 +213,7 @@ def create_app() -> Flask:
                 render_template(
                     "index.html",
                     **_index_context(
-                        error_msg=f"Ошибка конвертации: {e}",
+                        error_msg=_("Ошибка конвертации: %(error)s", error=str(e)),
                         selected_src=src,
                         selected_dst=dst,
                         custom_transforms=custom_transforms,
@@ -170,7 +249,7 @@ def create_app() -> Flask:
                 render_template(
                     "materials.html",
                     **_materials_context(
-                        materials_error="Нужно выбрать хотя бы один материал",
+                        materials_error=_("Нужно выбрать хотя бы один материал"),
                         selected_materials=selected_ids,
                         materials_dst=dst_units,
                         materials_out_name=out_name,
@@ -186,7 +265,7 @@ def create_app() -> Flask:
                 render_template(
                     "materials.html",
                     **_materials_context(
-                        materials_error=f"Ошибка экспорта материалов: {e}",
+                        materials_error=_("Ошибка экспорта материалов: %(error)s", error=str(e)),
                         selected_materials=selected_ids,
                         materials_dst=dst_units,
                         materials_out_name=out_name,
@@ -229,7 +308,7 @@ def create_app() -> Flask:
             converted = convert_string(payload, src=src, dst=dst, models=models)
         except Exception as e:
             # fall back to text response with error
-            return f"Ошибка конвертации: {e}", 400
+            return _("Ошибка конвертации: %(error)s", error=str(e)), 400
 
         buf = io.BytesIO(converted.encode("utf-8"))
         return send_file(

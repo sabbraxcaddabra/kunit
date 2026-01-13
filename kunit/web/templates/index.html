@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru" class="h-full">
+<html lang="{{ lang }}" class="h-full">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>kunit — Конвертер единиц LS-DYNA</title>
+    <title>{{ _("kunit — Конвертер единиц LS-DYNA") }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="min-h-full bg-slate-50 text-slate-900">
@@ -11,10 +11,20 @@
       <header class="flex items-center justify-between flex-wrap gap-3 mb-2">
         <div>
           <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">LS-DYNA</p>
-          <h1 class="text-3xl font-semibold leading-tight">kunit — конвертер единиц</h1>
-          <p class="text-slate-600">Преобразуйте модели между системами единиц, сохраняя фиксированную ширину.</p>
+          <h1 class="text-3xl font-semibold leading-tight">{{ _("kunit — конвертер единиц") }}</h1>
+          <p class="text-slate-600">{{ _("Преобразуйте модели между системами единиц, сохраняя фиксированную ширину.") }}</p>
         </div>
-        <a href="/materials" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">Библиотека материалов</a>
+        <div class="flex items-center gap-3 flex-wrap">
+          <form method="post" action="/lang" class="inline-flex items-center gap-2">
+            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}" />
+            <select name="lang" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" onchange="this.form.submit()">
+              {% for code, label in languages %}
+              <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </form>
+          <a href="/materials" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">{{ _("Библиотека материалов") }}</a>
+        </div>
       </header>
 
       {% if error_msg %}
@@ -28,14 +38,14 @@
 
         <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-5">
           <div class="space-y-2">
-            <label for="file_input" class="block text-sm font-medium text-slate-700">Файл (.k)</label>
+            <label for="file_input" class="block text-sm font-medium text-slate-700">{{ _("Файл (.k)") }}</label>
             <input type="file" id="file_input" name="file_input" accept=".k,text/plain" class="block w-full text-sm text-slate-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
-            <p class="text-xs text-slate-500">Файл приоритетен, если вставка пустая.</p>
+            <p class="text-xs text-slate-500">{{ _("Файл приоритетен, если вставка пустая.") }}</p>
           </div>
 
           <div class="space-y-3">
             <div>
-              <label class="block text-sm font-medium text-slate-700">Исходные единицы</label>
+              <label class="block text-sm font-medium text-slate-700">{{ _("Исходные единицы") }}</label>
               {% set selected_src = selected_src or (units|first).key %}
               <select name="src" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
                 {% for u in units %}
@@ -45,10 +55,10 @@
             </div>
             <div class="flex items-center gap-2 text-sm text-slate-600">
               <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500">→</span>
-              <span>Перевести в</span>
+              <span>{{ _("Перевести в") }}</span>
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700">Целевые единицы</label>
+              <label class="block text-sm font-medium text-slate-700">{{ _("Целевые единицы") }}</label>
               {% set selected_dst = selected_dst or (units|last).key %}
               <select name="dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
                 {% for u in units %}
@@ -59,7 +69,7 @@
           </div>
 
           <div>
-            <p class="block text-sm font-medium text-slate-700 mb-2">Модели</p>
+            <p class="block text-sm font-medium text-slate-700 mb-2">{{ _("Модели") }}</p>
             {% set selected_models = selected_models or default_models %}
             <div class="grid sm:grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-1">
               {% for m in models %}
@@ -72,19 +82,19 @@
           </div>
 
           <div class="space-y-2">
-            <label for="out_name" class="block text-sm font-medium text-slate-700">Имя файла результата</label>
+            <label for="out_name" class="block text-sm font-medium text-slate-700">{{ _("Имя файла результата") }}</label>
             <input type="text" id="out_name" name="out_name" value="{{ out_name or 'converted.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
           </div>
 
           <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Конвертировать</button>
-            <p class="text-xs text-slate-500">Состояние формы сохраняется локально.</p>
+            <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">{{ _("Конвертировать") }}</button>
+            <p class="text-xs text-slate-500">{{ _("Состояние формы сохраняется локально.") }}</p>
           </div>
         </div>
 
         <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-3">
-          <label for="text_input" class="block text-sm font-medium text-slate-700">Или вставьте текст</label>
-          <textarea id="text_input" name="text_input" placeholder="Вставьте содержимое .k..." class="w-full min-h-[22rem] rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
+          <label for="text_input" class="block text-sm font-medium text-slate-700">{{ _("Или вставьте текст") }}</label>
+          <textarea id="text_input" name="text_input" placeholder="{{ _("Вставьте содержимое .k...") }}" class="w-full min-h-[22rem] rounded-xl border border-slate-200 focus:ring-2 focus:ring-sky-400 focus:border-sky-400 bg-slate-50/60 px-3 py-2 font-mono text-sm" ></textarea>
         </div>
       </form>
     </div>

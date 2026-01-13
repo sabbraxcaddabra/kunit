@@ -1,22 +1,30 @@
 <!doctype html>
-<html lang="ru" class="h-full">
+<html lang="{{ lang }}" class="h-full">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Библиотека материалов — kunit</title>
+    <title>{{ _("Библиотека материалов — kunit") }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="min-h-full bg-slate-50 text-slate-900">
     <div class="max-w-6xl mx-auto px-4 py-10 space-y-6">
       <header class="flex items-start justify-between flex-wrap gap-3">
         <div class="space-y-1">
-          <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">Карты материалов</p>
-          <h1 class="text-3xl font-semibold leading-tight">Библиотека материалов</h1>
-          <p class="text-slate-600 max-w-3xl">Просматривайте встроенные карты: название, текст карты, ключевые слова и размерность. Можно выбрать несколько и экспортировать в нужные единицы.</p>
+          <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">{{ _("Карты материалов") }}</p>
+          <h1 class="text-3xl font-semibold leading-tight">{{ _("Библиотека материалов") }}</h1>
+          <p class="text-slate-600 max-w-3xl">{{ _("Просматривайте встроенные карты: название, текст карты, ключевые слова и размерность. Можно выбрать несколько и экспортировать в нужные единицы.") }}</p>
         </div>
         <div class="flex items-center gap-3 flex-wrap text-sm text-slate-600">
-          <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 border border-slate-200 shadow-sm">Всего: {{ materials|length }}</span>
-          <a href="/" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">К конвертеру</a>
+          <form method="post" action="/lang" class="inline-flex items-center gap-2">
+            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}" />
+            <select name="lang" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" onchange="this.form.submit()">
+              {% for code, label in languages %}
+              <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </form>
+          <span class="inline-flex items-center rounded-full bg-white px-3 py-1.5 border border-slate-200 shadow-sm">{{ _("Всего: %(count)s", count=materials|length) }}</span>
+          <a href="/" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">{{ _("К конвертеру") }}</a>
         </div>
       </header>
 
@@ -29,33 +37,33 @@
           <div class="space-y-4 pr-1" id="materials-panel" data-default-collapsed="{{ 'true' if materials_export else 'false' }}">
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <div class="space-y-1">
-                <p class="text-sm font-semibold text-slate-800">Поиск и фильтры</p>
-                <p class="text-xs text-slate-500">Ищите по названию, модели или ключевым словам.</p>
+                <p class="text-sm font-semibold text-slate-800">{{ _("Поиск и фильтры") }}</p>
+                <p class="text-xs text-slate-500">{{ _("Ищите по названию, модели или ключевым словам.") }}</p>
               </div>
               <div class="flex items-center gap-2 text-sm">
-                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-toggle-materials="collapse">Свернуть список</button>
-                <span id="materials-visible-count" class="text-xs text-slate-500">Показано: {{ materials|length }} из {{ materials|length }}</span>
+                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-toggle-materials="collapse">{{ _("Свернуть список") }}</button>
+                <span id="materials-visible-count" class="text-xs text-slate-500">{{ _("Показано: %(shown)s из %(total)s", shown=materials|length, total=materials|length) }}</span>
               </div>
             </div>
 
             <div id="materials-filters" class="grid md:grid-cols-3 gap-3">
               <label class="space-y-1">
-                <span class="block text-sm font-medium text-slate-700">Поиск по названию</span>
-                <input id="material-search" type="search" placeholder="Например: Steel" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                <span class="block text-sm font-medium text-slate-700">{{ _("Поиск по названию") }}</span>
+                <input id="material-search" type="search" placeholder="{{ _("Например: Steel") }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
               </label>
               <label class="space-y-1">
-                <span class="block text-sm font-medium text-slate-700">Модель или EOS</span>
+                <span class="block text-sm font-medium text-slate-700">{{ _("Модель или EOS") }}</span>
                 <select id="material-model-filter" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
-                  <option value="">Все варианты</option>
+                  <option value="">{{ _("Все варианты") }}</option>
                   {% if material_models %}
-                    <optgroup label="Материальные модели">
+                    <optgroup label="{{ _("Материальные модели") }}">
                       {% for model in material_models %}
                         <option value="material:{{ model }}">{{ model }}</option>
                       {% endfor %}
                     </optgroup>
                   {% endif %}
                   {% if eos_models %}
-                    <optgroup label="Уравнения состояния">
+                    <optgroup label="{{ _("Уравнения состояния") }}">
                       {% for model in eos_models %}
                         <option value="eos:{{ model }}">{{ model }}</option>
                       {% endfor %}
@@ -64,19 +72,19 @@
                 </select>
               </label>
               <label class="space-y-1">
-                <span class="block text-sm font-medium text-slate-700">Ключевые слова или теги</span>
-                <input id="material-keywords" type="search" placeholder="Например: взрыв, броня" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
+                <span class="block text-sm font-medium text-slate-700">{{ _("Ключевые слова или теги") }}</span>
+                <input id="material-keywords" type="search" placeholder="{{ _("Например: взрыв, броня") }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
               </label>
             </div>
 
             <div id="materials-collapsed" class="hidden rounded-xl border border-slate-200 bg-white shadow-sm px-4 py-3">
               <div class="flex items-center justify-between gap-3 flex-wrap">
                 <div class="space-y-1">
-                  <p class="text-sm font-semibold text-slate-800">Список материалов свернут</p>
-                  <p class="text-xs text-slate-500">Разверните, чтобы выбрать дополнительные материалы.</p>
+                  <p class="text-sm font-semibold text-slate-800">{{ _("Список материалов свернут") }}</p>
+                  <p class="text-xs text-slate-500">{{ _("Разверните, чтобы выбрать дополнительные материалы.") }}</p>
                 </div>
                 <div class="flex items-center gap-2">
-                  <button type="button" class="inline-flex items-center justify-center rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600" data-toggle-materials="expand">Показать список</button>
+                  <button type="button" class="inline-flex items-center justify-center rounded-lg bg-slate-800 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600" data-toggle-materials="expand">{{ _("Показать список") }}</button>
                 </div>
               </div>
             </div>
@@ -87,21 +95,24 @@
                 {% set material_section = m.material %}
                 {% set eos_section = m.eos %}
                 {% set models = m.models or [m.model] %}
-                <label class="material-card flex flex-col gap-3 rounded-xl border border-slate-200 px-4 py-3 bg-white/80 hover:border-sky-300 shadow-sm" data-name="{{ (m.name ~ ' ' ~ m.material_id)|lower }}" data-models="{{ models|join(' ')|lower }}" data-material-model="{{ material_section.model }}" data-eos-model="{{ eos_section.model if eos_section else '' }}" data-tags="{{ ((m.tags|join(' ')) ~ ' ' ~ (m.comment or ''))|lower }}">
+                {% set display_name = m.display_name(lang) %}
+                {% set display_comment = m.display_comment(lang) %}
+                {% set display_tags = m.display_tags(lang) %}
+                <label class="material-card flex flex-col gap-3 rounded-xl border border-slate-200 px-4 py-3 bg-white/80 hover:border-sky-300 shadow-sm" data-name="{{ (display_name ~ ' ' ~ m.material_id)|lower }}" data-models="{{ models|join(' ')|lower }}" data-material-model="{{ material_section.model }}" data-eos-model="{{ eos_section.model if eos_section else '' }}" data-tags="{{ ((display_tags|join(' ')) ~ ' ' ~ (display_comment or ''))|lower }}">
                   <div class="flex items-start gap-3">
                     <input type="checkbox" name="materials" value="{{ m.material_id }}" class="mt-1 h-4 w-4 text-sky-600 border-slate-300 rounded" {% if m.material_id in (selected_materials or []) %}checked{% endif %} />
                     <div class="space-y-1">
                       <div class="flex items-center gap-2 flex-wrap">
-                        <h2 class="text-base font-semibold text-slate-900">{{ m.name }}</h2>
+                        <h2 class="text-base font-semibold text-slate-900">{{ display_name }}</h2>
                         <span class="text-xs text-slate-500">{{ m.material_id }}</span>
                       </div>
-                      <p class="text-sm text-slate-600">Модели: {{ models|join(', ') }} · Размерность: {{ unit_labels.get(m.units, m.units) }}</p>
-                      {% if m.comment %}
-                        <p class="text-xs text-slate-500">{{ m.comment }}</p>
+                      <p class="text-sm text-slate-600">{{ _("Модели: %(models)s · Размерность: %(units)s", models=models|join(', '), units=unit_labels.get(m.units, m.units)) }}</p>
+                      {% if display_comment %}
+                        <p class="text-xs text-slate-500">{{ display_comment }}</p>
                       {% endif %}
-                      {% if m.tags %}
+                      {% if display_tags %}
                         <div class="flex flex-wrap gap-2 pt-1">
-                          {% for tag in m.tags %}
+                          {% for tag in display_tags %}
                             <span class="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">{{ tag }}</span>
                           {% endfor %}
                         </div>
@@ -112,8 +123,8 @@
                     {% for section in m.sections %}
                       <div class="space-y-1">
                         <div class="flex items-center justify-between gap-3">
-                          <p class="text-xs uppercase tracking-wide text-slate-500 font-semibold">Текст {{ section.kind|upper }}</p>
-                          <button type="button" class="inline-flex items-center justify-center rounded border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-copy-target="material-payload-{{ material_index }}-{{ loop.index }}">Копировать</button>
+                          <p class="text-xs uppercase tracking-wide text-slate-500 font-semibold">{{ _("Текст") }} {{ section.kind|upper }}</p>
+                          <button type="button" class="inline-flex items-center justify-center rounded border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-copy-target="material-payload-{{ material_index }}-{{ loop.index }}">{{ _("Копировать") }}</button>
                         </div>
                         <pre id="material-payload-{{ material_index }}-{{ loop.index }}" class="text-[13px] leading-5 font-mono text-slate-800 whitespace-pre-wrap">{{ section.payload }}</pre>
                       </div>
@@ -123,20 +134,20 @@
               {% endfor %}
             </div>
 
-            <div id="materials-empty" class="hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-600 px-4 py-6 text-sm text-center">По текущим фильтрам ничего не найдено.</div>
+            <div id="materials-empty" class="hidden rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-600 px-4 py-6 text-sm text-center">{{ _("По текущим фильтрам ничего не найдено.") }}</div>
 
             <div id="materials-pagination" class="hidden items-center justify-between gap-3 flex-wrap rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm">
               <div class="flex items-center gap-2">
-                <button type="button" id="materials-prev" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-40 disabled:cursor-not-allowed">Назад</button>
-                <button type="button" id="materials-next" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-40 disabled:cursor-not-allowed">Вперед</button>
+                <button type="button" id="materials-prev" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-40 disabled:cursor-not-allowed">{{ _("Назад") }}</button>
+                <button type="button" id="materials-next" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-1.5 font-semibold text-slate-700 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 disabled:opacity-40 disabled:cursor-not-allowed">{{ _("Вперед") }}</button>
               </div>
-              <span id="materials-page-info" class="text-xs text-slate-500">Страница 1</span>
+              <span id="materials-page-info" class="text-xs text-slate-500">{{ _("Страница 1") }}</span>
             </div>
           </div>
 
           <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-5 space-y-4">
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-700">Экспортировать в единицы</label>
+              <label class="block text-sm font-medium text-slate-700">{{ _("Экспортировать в единицы") }}</label>
               {% set materials_dst = materials_dst or (units|first).key %}
               <select name="materials_dst" class="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400">
                 {% for u in units %}
@@ -145,12 +156,12 @@
               </select>
             </div>
             <div class="space-y-2">
-              <label class="block text-sm font-medium text-slate-700">Имя файла для выгрузки</label>
+              <label class="block text-sm font-medium text-slate-700">{{ _("Имя файла для выгрузки") }}</label>
               <input type="text" name="materials_out_name" value="{{ materials_out_name or 'materials.k' }}" class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" />
             </div>
             <div class="flex items-center gap-3">
-              <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">Экспортировать выбранные</button>
-              <p class="text-xs text-slate-500">Можно сразу скопировать результат или скачать файл.</p>
+              <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-900 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-600">{{ _("Экспортировать выбранные") }}</button>
+              <p class="text-xs text-slate-500">{{ _("Можно сразу скопировать результат или скачать файл.") }}</p>
             </div>
           </div>
         </div>
@@ -159,15 +170,15 @@
           <div class="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <div>
-                <p class="text-sm font-semibold">Результат экспорта</p>
-                <p class="text-xs text-slate-500">Сконвертировано в {{ unit_labels.get(materials_dst, materials_dst) }}.</p>
+                <p class="text-sm font-semibold">{{ _("Результат экспорта") }}</p>
+                <p class="text-xs text-slate-500">{{ _("Сконвертировано в %(units)s.", units=unit_labels.get(materials_dst, materials_dst)) }}</p>
               </div>
               <div class="flex items-center gap-2">
-                <button type="button" id="materials-copy" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 text-sm" data-target="materials-output">Копировать</button>
+                <button type="button" id="materials-copy" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-3 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500 text-sm" data-target="materials-output">{{ _("Копировать") }}</button>
                 <form method="post" action="/materials/download" class="flex items-center">
                   <input type="hidden" name="payload" value="{{ materials_export }}" />
                   <input type="hidden" name="materials_out_name" value="{{ materials_out_name or 'materials.k' }}" />
-                  <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скачать</button>
+                  <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-sky-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">{{ _("Скачать") }}</button>
                 </form>
               </div>
             </div>
@@ -179,6 +190,14 @@
 
     <script>
       (function () {
+        const MSG_FOUND = "{{ _('Найдено: %(count)s · Страница %(page)s/%(pages)s', count='%(count)s', page='%(page)s', pages='%(pages)s') }}";
+        const MSG_NOT_FOUND = "{{ _('Ничего не найдено') }}";
+        const MSG_PAGE_OF = "{{ _('Страница %(page)s из %(pages)s', page='%(page)s', pages='%(pages)s') }}";
+
+        function formatMsg(template, vars) {
+          return template.replace(/%\(([^)]+)\)s/g, (match, key) => String(vars[key] ?? ''));
+        }
+
         const materialsCopy = document.getElementById('materials-copy');
         materialsCopy?.addEventListener('click', () => {
           const targetId = materialsCopy.getAttribute('data-target');
@@ -301,8 +320,8 @@
           if (visibleCount) {
             const totalPages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
             visibleCount.textContent = filteredCards.length
-              ? `Найдено: ${filteredCards.length} · Страница ${currentPage}/${totalPages}`
-              : 'Ничего не найдено';
+              ? formatMsg(MSG_FOUND, { count: filteredCards.length, page: currentPage, pages: totalPages })
+              : MSG_NOT_FOUND;
           }
 
           if (emptyState) {
@@ -337,7 +356,7 @@
           }
           if (pageInfo) {
             const pages = Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));
-            pageInfo.textContent = `Страница ${Math.min(currentPage, pages)} из ${pages}`;
+            pageInfo.textContent = formatMsg(MSG_PAGE_OF, { page: Math.min(currentPage, pages), pages });
           }
           if (prevBtn) prevBtn.disabled = currentPage <= 1;
           if (nextBtn) nextBtn.disabled = currentPage >= Math.max(1, Math.ceil(filteredCards.length / PAGE_SIZE));

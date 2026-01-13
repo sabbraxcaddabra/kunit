@@ -1,6 +1,8 @@
 import textwrap
 from pathlib import Path
 
+import pytest
+
 from kunit.api import convert_string
 from kunit.core.fixed import format_lsdyna_10, join_fixed
 from kunit.materials_store import MaterialStore, convert_materials, export_materials
@@ -23,10 +25,11 @@ def test_tags_parsed_from_comma_separated_string(tmp_path: Path):
         """
 [[materials]]
 id = "sample"
-name = "Sample"
+name = { ru = "Пример", en = "Sample" }
+comment = { ru = "Описание", en = "Description" }
 model = "mat-jc"
 units = "mm-mg-us"
-tags = "alpha, beta , ,gamma "
+tags = { ru = "alpha, beta , ,gamma ", en = "one, two" }
 text = "*MAT_JOHNSON_COOK"
 """,
     )
@@ -36,6 +39,7 @@ text = "*MAT_JOHNSON_COOK"
 
     assert len(materials) == 1
     assert materials[0].tags == ["alpha", "beta", "gamma"]
+    assert materials[0].display_tags("en") == ["one", "two"]
 
 
 def test_tags_list_is_preserved(tmp_path: Path):
@@ -44,10 +48,11 @@ def test_tags_list_is_preserved(tmp_path: Path):
         """
 [[materials]]
 id = "sample-list"
-name = "List"
+name = { ru = "Список", en = "List" }
+comment = { ru = "Описание", en = "Description" }
 model = "mat-jc"
 units = "mm-mg-us"
-tags = ["one", "two", "three"]
+tags = { ru = ["one", "two", "three"], en = ["uno", "dos", "tres"] }
 text = "*MAT_JOHNSON_COOK"
 """,
     )
@@ -57,6 +62,27 @@ text = "*MAT_JOHNSON_COOK"
 
     assert len(materials) == 1
     assert materials[0].tags == ["one", "two", "three"]
+    assert materials[0].display_tags("en") == ["uno", "dos", "tres"]
+
+
+def test_i18n_fields_require_ru_and_en(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        """
+[[materials]]
+id = "bad"
+name = { ru = "Плохой", en = "" }
+comment = { ru = "Описание", en = "Description" }
+tags = { ru = ["a"], en = ["b"] }
+model = "mat-jc"
+units = "mm-mg-us"
+text = "*MAT_JOHNSON_COOK"
+""",
+    )
+
+    store = MaterialStore(tmp_path)
+    with pytest.raises(ValueError, match="name\\.en"):
+        store.list_materials()
 
 
 def test_multi_block_material_conversion(tmp_path: Path):
@@ -65,9 +91,11 @@ def test_multi_block_material_conversion(tmp_path: Path):
         '''
 [[materials]]
 id = "multi-block"
-name = "HE with EOS"
+name = { ru = "HE with EOS", en = "HE with EOS" }
+comment = { ru = "Описание", en = "Description" }
 model = "mat-he-burn"
 units = "mm-mg-us"
+tags = { ru = ["he", "eos"], en = ["he", "eos"] }
 text = """*MAT_HIGH_EXPLOSIVE_BURN
 $#     mid        ro         d       pcj      beta         k         g      sigy
         1       1.2       2.0       3.0       0.0       0.0       0.0       4.0
@@ -101,7 +129,9 @@ def test_multi_section_material_conversion(tmp_path: Path):
         '''
 [[materials]]
 id = "hmx"
-name = "HMX"
+name = { ru = "HMX", en = "HMX" }
+comment = { ru = "Описание", en = "Description" }
+tags = { ru = ["he"], en = ["he"] }
 
 [materials.material]
 model = "mat-he-burn"
@@ -148,9 +178,11 @@ def test_export_materials_rewrites_identifiers(tmp_path: Path):
             '''
             [[materials]]
             id = "alpha"
-            name = "Alpha"
+            name = { ru = "Alpha", en = "Alpha" }
+            comment = { ru = "Описание", en = "Description" }
             model = "mat-he-burn"
             units = "mm-mg-us"
+            tags = { ru = ["x"], en = ["x"] }
             text = """*MAT_HIGH_EXPLOSIVE_BURN
             $#     mid        ro         d       pcj      beta         k         g      sigy
                     10       1.2       2.0       3.0       0.0       0.0       0.0       4.0
@@ -161,9 +193,11 @@ def test_export_materials_rewrites_identifiers(tmp_path: Path):
 
             [[materials]]
             id = "beta"
-            name = "Beta"
+            name = { ru = "Beta", en = "Beta" }
+            comment = { ru = "Описание", en = "Description" }
             model = "mat-he-burn"
             units = "mm-mg-us"
+            tags = { ru = ["y"], en = ["y"] }
             text = """*MAT_HIGH_EXPLOSIVE_BURN
             $#     mid        ro         d       pcj      beta         k         g      sigy
                     10       1.5       2.5       3.5       0.0       0.0       0.0       4.5
@@ -199,7 +233,9 @@ def test_export_materials_enforces_shared_auto_increment_ids(tmp_path: Path):
             '''
             [[materials]]
             id = "gamma"
-            name = "Gamma"
+            name = { ru = "Gamma", en = "Gamma" }
+            comment = { ru = "Описание", en = "Description" }
+            tags = { ru = ["z"], en = ["z"] }
 
             [materials.material]
             model = "mat-he-burn"
@@ -219,7 +255,9 @@ def test_export_materials_enforces_shared_auto_increment_ids(tmp_path: Path):
 
             [[materials]]
             id = "delta"
-            name = "Delta"
+            name = { ru = "Delta", en = "Delta" }
+            comment = { ru = "Описание", en = "Description" }
+            tags = { ru = ["d"], en = ["d"] }
 
             [materials.material]
             model = "mat-he-burn"
@@ -265,9 +303,11 @@ def test_convert_materials_rewrites_identifiers(tmp_path: Path):
             f'''
             [[materials]]
             id = "first"
-            name = "First"
+            name = {{ ru = "First", en = "First" }}
+            comment = {{ ru = "Описание", en = "Description" }}
             model = "mat-he-burn"
             units = "mm-mg-us"
+            tags = {{ ru = ["x"], en = ["x"] }}
             text = """*MAT_HIGH_EXPLOSIVE_BURN
             $#     mid        ro         d       pcj      beta         k         g      sigy
             {_fixed_line([22, 1.891, 0.911, 0.42, 0.0, 0.0, 0.0, 0.0])}
@@ -278,9 +318,11 @@ def test_convert_materials_rewrites_identifiers(tmp_path: Path):
 
             [[materials]]
             id = "second"
-            name = "Second"
+            name = {{ ru = "Second", en = "Second" }}
+            comment = {{ ru = "Описание", en = "Description" }}
             model = "mat-he-burn"
             units = "mm-mg-us"
+            tags = {{ ru = ["y"], en = ["y"] }}
             text = """*MAT_HIGH_EXPLOSIVE_BURN
             $#     mid        ro         d       pcj      beta         k         g      sigy
             {_fixed_line([105, 2.0, 1.0, 0.5, 0.0, 0.0, 0.0, 0.0])}

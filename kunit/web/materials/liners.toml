@@ -1,9 +1,9 @@
 [[materials]]
 id = "cu-ofhc(jc)"
-name = "Медь"
+name = { ru = "Медь", en = "Copper" }
 reference = "https://example.com/hexolite"
-comment = "Отожженная медь, аналог отечественной меди М1"
-tags = "медь, кумулятивная облицовки"
+comment = { ru = "Отожженная медь, аналог отечественной меди М1", en = "Annealed copper, similar to M1 copper" }
+tags = { ru = ["медь", "кумулятивная облицовки"], en = ["copper", "shaped charge liner"] }
 
 [materials.material]
 model = "mat-jc"
@@ -33,10 +33,10 @@ $#      v0         -      lcid
 
 [[materials]]
 id = "ta(jc)"
-name = "Тантал"
+name = { ru = "Тантал", en = "Tantalum" }
 reference = "https://example.com/hexolite"
-comment = "Чистый тантал"
-tags = "тантал, кумулятивная облицовки, ударное ядро"
+comment = { ru = "Чистый тантал", en = "Pure tantalum" }
+tags = { ru = ["тантал", "кумулятивная облицовки", "ударное ядро"], en = ["tantalum", "shaped charge liner", "efp"] }
 
 [materials.material]
 model = "mat-jc"
@@ -66,10 +66,10 @@ $#      v0         -      lcid
 
 [[materials]]
 id = "ta-w2.5(jc)"
-name = "Тантал/Вольфрам (2.5%)"
+name = { ru = "Тантал/Вольфрам (2.5%)", en = "Tantalum/Tungsten (2.5%)" }
 reference = "https://example.com/hexolite"
-comment = "Сплав тантала с вольфрамом. Содержание вольфрама 2.5%. Уравнение состояния приведено для чистого тантала до появления новых данных"
-tags = "танталовый сплав, кумулятивная облицовки, ударное ядро"
+comment = { ru = "Сплав тантала с вольфрамом. Содержание вольфрама 2.5%. Уравнение состояния приведено для чистого тантала до появления новых данных", en = "Tantalum-tungsten alloy (2.5% W). EOS is specified for pure tantalum until new data becomes available" }
+tags = { ru = ["танталовый сплав", "кумулятивная облицовки", "ударное ядро"], en = ["tantalum alloy", "shaped charge liner", "efp"] }
 
 [materials.material]
 model = "mat-jc"
@@ -98,10 +98,10 @@ $#      v0         -      lcid
 """
 [[materials]]
 id = "ta-w5(jc)"
-name = "Тантал/Вольфрам (5%)"
+name = { ru = "Тантал/Вольфрам (5%)", en = "Tantalum/Tungsten (5%)" }
 reference = "https://example.com/hexolite"
-comment = "Сплав тантала с вольфрамом. Содержание вольфрама 5%. Уравнение состояния приведено для сплава тантала с вольфрамом (содержание вольфрама 10%) до появления новых данных"
-tags = "танталовый сплав, кумулятивная облицовки, ударное ядро"
+comment = { ru = "Сплав тантала с вольфрамом. Содержание вольфрама 5%. Уравнение состояния приведено для сплава тантала с вольфрамом (содержание вольфрама 10%) до появления новых данных", en = "Tantalum-tungsten alloy (5% W). EOS is specified for Ta-W (10% W) until new data becomes available" }
+tags = { ru = ["танталовый сплав", "кумулятивная облицовки", "ударное ядро"], en = ["tantalum alloy", "shaped charge liner", "efp"] }
 
 [materials.material]
 model = "mat-jc"
@@ -131,10 +131,10 @@ $#      v0         -      lcid
 
 [[materials]]
 id = "ta-w10(jc)"
-name = "Тантал/Вольфрам (10%)"
+name = { ru = "Тантал/Вольфрам (10%)", en = "Tantalum/Tungsten (10%)" }
 reference = "https://example.com/hexolite"
-comment = "Сплав тантала с вольфрамом. Содержание вольфрама 10%."
-tags = "танталовый сплав, кумулятивная облицовки, ударное ядро"
+comment = { ru = "Сплав тантала с вольфрамом. Содержание вольфрама 10%.", en = "Tantalum-tungsten alloy (10% W)" }
+tags = { ru = ["танталовый сплав", "кумулятивная облицовки", "ударное ядро"], en = ["tantalum alloy", "shaped charge liner", "efp"] }
 
 [materials.material]
 model = "mat-jc"

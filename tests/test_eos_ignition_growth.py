@@ -24,6 +24,7 @@ def test_ignition_growth_unit_scaling_from_reference_card():
     pressure_scale = scale_factor(src, dst, DIMS["a"])
     specific_heat_scale = scale_factor(src, dst, DIMS["g"])
     cv_scale = scale_factor(src, dst, DIMS["cvp"])
+    cvr_scale = scale_factor(src, dst, DIMS["cvr"])
     time_scale = scale_factor(src, dst, DIMS["freq"])
     fmxig_scale = scale_factor(src, dst, DIMS.get("fmxig", (0, 0, 0)))
     fmxgr_scale = scale_factor(src, dst, DIMS.get("fmxgr", (0, 0, 0)))
@@ -53,7 +54,7 @@ def test_ignition_growth_unit_scaling_from_reference_card():
 
     card3 = _fields(lines[3])
     assert float(card3[2]) == pytest.approx(1e-5 * cv_scale)  # CVP (pressure)
-    assert float(card3[3]) == pytest.approx(2.49e-5 * cv_scale)  # CVR (pressure)
+    assert float(card3[3]) == pytest.approx(2.49e-5 * cvr_scale)  # CVR (pressure)
 
     card4 = _fields(lines[4])
     # grow2 has dim 1/(P^EN * t); EN=3

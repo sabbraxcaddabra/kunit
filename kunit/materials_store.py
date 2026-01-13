@@ -35,6 +35,65 @@ def _extract_models_from_payload(payload: str) -> List[str]:
     return models
 
 
+def _require_lang_map(
+    raw: object, *, field: str, material_id: str, source_path: Path
+) -> Mapping[str, Any]:
+    if not isinstance(raw, Mapping):
+        raise ValueError(
+            f"Field '{field}' for material '{material_id}' in {source_path} must be a TOML inline table like "
+            f"{{ru=..., en=...}}"
+        )
+    if "ru" not in raw or "en" not in raw:
+        raise ValueError(
+            f"Field '{field}' for material '{material_id}' in {source_path} must include both 'ru' and 'en'"
+        )
+    return raw
+
+
+def _parse_i18n_string(
+    raw: object, *, field: str, material_id: str, source_path: Path
+) -> Mapping[str, str]:
+    data = _require_lang_map(raw, field=field, material_id=material_id, source_path=source_path)
+    out: dict[str, str] = {}
+    for lang in ("ru", "en"):
+        val = data.get(lang)
+        if not isinstance(val, str) or not val.strip():
+            raise ValueError(
+                f"Field '{field}.{lang}' for material '{material_id}' in {source_path} must be a non-empty string"
+            )
+        out[lang] = val.strip()
+    return out
+
+
+def _parse_i18n_tags(
+    raw: object, *, field: str, material_id: str, source_path: Path
+) -> Mapping[str, List[str]]:
+    data = _require_lang_map(raw, field=field, material_id=material_id, source_path=source_path)
+    out: dict[str, List[str]] = {}
+    for lang in ("ru", "en"):
+        val = data.get(lang)
+        tags: List[str]
+        if isinstance(val, str):
+            tags = [t.strip() for t in val.split(",") if t.strip()]
+        elif isinstance(val, Sequence) and not isinstance(val, (str, bytes)):
+            if any(not isinstance(tag, str) for tag in val):
+                raise ValueError(
+                    f"Each tag for field '{field}.{lang}' of material '{material_id}' in {source_path} must be a string"
+                )
+            tags = [str(tag).strip() for tag in val if str(tag).strip()]
+        else:
+            raise ValueError(
+                f"Field '{field}.{lang}' for material '{material_id}' in {source_path} must be a list of strings "
+                f"or a comma-separated string"
+            )
+        if not tags:
+            raise ValueError(
+                f"Field '{field}.{lang}' for material '{material_id}' in {source_path} must be non-empty"
+            )
+        out[lang] = tags
+    return out
+
+
 @dataclass(frozen=True)
 class MaterialSection:
     kind: str
@@ -59,9 +118,22 @@ class MaterialRecord:
     reference: str | None = None
     comment: str | None = None
     tags: Sequence[str] = field(default_factory=list)
+    name_i18n: Mapping[str, str] = field(default_factory=dict)
+    comment_i18n: Mapping[str, str] = field(default_factory=dict)
+    tags_i18n: Mapping[str, Sequence[str]] = field(default_factory=dict)
     meta: Mapping[str, Any] = field(default_factory=dict)
     source: str | None = None
     sections: Sequence[MaterialSection] = field(default_factory=list)
+
+    def display_name(self, lang: str) -> str:
+        return str(self.name_i18n.get(lang) or self.name)
+
+    def display_comment(self, lang: str) -> str | None:
+        return self.comment_i18n.get(lang) or self.comment
+
+    def display_tags(self, lang: str) -> Sequence[str]:
+        tags = self.tags_i18n.get(lang)
+        return list(tags) if tags is not None else list(self.tags)
 
     @property
     def material(self) -> MaterialSection:
@@ -90,12 +162,13 @@ class MaterialStore:
 
     [[materials]]
     id = "steel-1"
-    name = "Steel #1"
+    name = { ru = "Сталь #1", en = "Steel #1" }
     model = "mat-jc"
     units = "mm-mg-us"
     text = "*MAT..."
     reference = "https://example.com/ref"
-    comment = "Short note about provenance"
+    comment = { ru = "Описание на русском", en = "English description" }
+    tags = { ru = ["тег1", "тег2"], en = ["tag1", "tag2"] }
     """
 
     def __init__(self, root: str | Path):
@@ -158,25 +231,33 @@ class MaterialStore:
 
         material_id = str(raw.get("id") or raw.get("name") or source_path.stem)
 
-        name = str(raw.get("name") or material_id).strip()
+        name_i18n = _parse_i18n_string(
+            raw.get("name"),
+            field="name",
+            material_id=material_id,
+            source_path=source_path,
+        )
+        name = name_i18n["ru"]
+
         reference = raw.get("reference")
         if reference is not None and not isinstance(reference, str):
             raise ValueError(f"Reference for material '{material_id}' must be a string if provided")
 
-        comment = raw.get("comment")
-        if comment is not None and not isinstance(comment, str):
-            raise ValueError(f"Comment for material '{material_id}' must be a string if provided")
+        comment_i18n = _parse_i18n_string(
+            raw.get("comment"),
+            field="comment",
+            material_id=material_id,
+            source_path=source_path,
+        )
+        comment = comment_i18n["ru"]
 
-        raw_tags = raw.get("tags") or []
-        tags: List[str]
-        if isinstance(raw_tags, str):
-            tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
-        elif isinstance(raw_tags, Sequence) and not isinstance(raw_tags, (str, bytes)):
-            if any(not isinstance(tag, str) for tag in raw_tags):
-                raise ValueError(f"Each tag for material '{material_id}' must be a string")
-            tags = [str(tag).strip() for tag in raw_tags if str(tag).strip()]
-        else:
-            raise ValueError(f"Tags for material '{material_id}' must be a list of strings or a comma-separated string")
+        tags_i18n = _parse_i18n_tags(
+            raw.get("tags"),
+            field="tags",
+            material_id=material_id,
+            source_path=source_path,
+        )
+        tags = tags_i18n["ru"]
 
         meta = raw.get("meta") if isinstance(raw.get("meta"), Mapping) else {}
 
@@ -240,6 +321,9 @@ class MaterialStore:
             reference=reference,
             comment=comment,
             tags=list(tags),
+            name_i18n=name_i18n,
+            comment_i18n=comment_i18n,
+            tags_i18n=tags_i18n,
             meta=meta,
             source=str(source_path),
             sections=sections,

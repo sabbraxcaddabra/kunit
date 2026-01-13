@@ -1,9 +1,9 @@
 [[materials]]
 id = "hmx"
-name = "Октоген"
+name = { ru = "Октоген", en = "HMX" }
 reference = "https://example.com/hexolite"
-comment = "Взрывчатое вещество октоген"
-tags = "взрывчатка, октоген"
+comment = { ru = "Взрывчатое вещество октоген", en = "Explosive HMX" }
+tags = { ru = ["взрывчатка", "октоген"], en = ["explosive", "hmx"] }
 
 [materials.material]
 model = "mat-he-burn"
@@ -25,10 +25,10 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 
 [[materials]]
 id = "tnt"
-name = "Тротил"
+name = { ru = "Тротил", en = "TNT" }
 reference = "https://example.com/hexolite"
-comment = "Взрывчатое вещество тротил"
-tags = "взрывчатка, тротил"
+comment = { ru = "Взрывчатое вещество тротил", en = "Explosive TNT" }
+tags = { ru = ["взрывчатка", "тротил"], en = ["explosive", "tnt"] }
 
 [materials.material]
 model = "mat-he-burn"
@@ -50,10 +50,10 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 
 [[materials]]
 id = "comp_a3"
-name = "Comp A-3 (А-IX-1)"
+name = { ru = "Comp A-3 (А-IX-1)", en = "Comp A-3 (A-IX-1)" }
 reference = "https://example.com/hexolite"
-comment = "Взрывчатое вещество Comp A-3, аналог отечественного (А-IX-1)"
-tags = "взрывчатка, comp a-3"
+comment = { ru = "Взрывчатое вещество Comp A-3, аналог отечественного (А-IX-1)", en = "Explosive Comp A-3, equivalent of A-IX-1" }
+tags = { ru = ["взрывчатка", "comp a-3"], en = ["explosive", "comp a-3"] }
 
 [materials.material]
 model = "mat-he-burn"
@@ -75,10 +75,10 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 
 [[materials]]
 id = "tnt(i&g)"
-name = "Тротил (модель кинетики Ли-Тарвера)"
+name = { ru = "Тротил (модель кинетики Ли-Тарвера)", en = "TNT (Lee-Tarver kinetics model)" }
 reference = "https://example.com/hexolite"
-comment = "Взрывчатое вещество тротил"
-tags = "взрывчатка, тротил"
+comment = { ru = "Взрывчатое вещество тротил", en = "Explosive TNT" }
+tags = { ru = ["взрывчатка", "тротил"], en = ["explosive", "tnt"] }
 
 [materials.material]
 model = "mat-null"
@@ -106,10 +106,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 
 [[materials]]
 id = "rdx"
-name = "RDX"
+name = { ru = "RDX", en = "RDX" }
 reference = ""
-comment = "Взрывчатое вещество гексоген"
-tags = "взрывчатка, гексоген"
+comment = { ru = "Взрывчатое вещество гексоген", en = "Explosive RDX" }
+tags = { ru = ["взрывчатка", "гексоген"], en = ["explosive", "rdx"] }
 
 [materials.material]
 model = "mat-he-burn"
@@ -131,10 +131,10 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 
 [[materials]]
 id = "pbx-9501(i&g)"
-name = "PBX 9501 (модель кинетики Ли-Тарвера)"
+name = { ru = "PBX 9501 (модель кинетики Ли-Тарвера)", en = "PBX 9501 (Lee-Tarver kinetics model)" }
 reference = ""
-comment = "Взрывчатое вещество пластит"
-tags = "взрывчатка, пластит"
+comment = { ru = "Взрывчатое вещество пластит", en = "Explosive PBX 9501" }
+tags = { ru = ["взрывчатка", "пластит"], en = ["explosive", "pbx 9501"] }
 
 [materials.material]
 model = "mat-null"
@@ -162,10 +162,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 
 [[materials]]
 id = "pbxn-109(i&g)"
-name = "PBXN-109 (модель кинетики Ли-Тарвера)"
+name = { ru = "PBXN-109 (модель кинетики Ли-Тарвера)", en = "PBXN-109 (Lee-Tarver kinetics model)" }
 reference = ""
-comment = "Взрывчатое вещество PBXN-109"
-tags = "взрывчатка, pbxn-109"
+comment = { ru = "Взрывчатое вещество PBXN-109", en = "Explosive PBXN-109" }
+tags = { ru = ["взрывчатка", "pbxn-109"], en = ["explosive", "pbxn-109"] }
 
 [materials.eos]
 model = "eos-ignition-growth"
@@ -184,10 +184,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 
 [[materials]]
 id = "jh-2(i&g)"
-name = "JH-2 (модель кинетики Ли-Тарвера)"
+name = { ru = "JH-2 (модель кинетики Ли-Тарвера)", en = "JH-2 (Lee-Tarver kinetics model)" }
 reference = ""
-comment = "Взрывчатое вещество JH-2, аналог отечественного А-IX-1"
-tags = "взрывчатка, jh-2"
+comment = { ru = "Взрывчатое вещество JH-2, аналог отечественного А-IX-1", en = "Explosive JH-2, equivalent of A-IX-1" }
+tags = { ru = ["взрывчатка", "jh-2"], en = ["explosive", "jh-2"] }
 
 [materials.material]
 model = "mat-null"
@@ -215,10 +215,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 
 [[materials]]
 id = "ultrafine-tatb(i&g)"
-name = "Ultrafine TATB (модель кинетики Ли-Тарвера)"
+name = { ru = "Ultrafine TATB (модель кинетики Ли-Тарвера)", en = "Ultrafine TATB (Lee-Tarver kinetics model)" }
 reference = ""
-comment = "Взрывчатое вещество мелкодисперсный ТАТБ"
-tags = "взрывчатка, татб"
+comment = { ru = "Взрывчатое вещество мелкодисперсный ТАТБ", en = "Explosive ultrafine TATB" }
+tags = { ru = ["взрывчатка", "татб"], en = ["explosive", "tatb"] }
 
 [materials.material]
 model = "mat-null"
@@ -246,10 +246,10 @@ $#   grow2       ar2       es2        en     fmxgr     fmngr
 
 [[materials]]
 id = "lx-17(i&g)"
-name = "LX-17 (модель кинетики Ли-Тарвера)"
+name = { ru = "LX-17 (модель кинетики Ли-Тарвера)", en = "LX-17 (Lee-Tarver kinetics model)" }
 reference = ""
-comment = "Взрывчатое вещество композит LX-17"
-tags = "взрывчатка, композит на основе татб, lx17"
+comment = { ru = "Взрывчатое вещество композит LX-17", en = "Explosive LX-17 composite" }
+tags = { ru = ["взрывчатка", "композит на основе татб", "lx17"], en = ["explosive", "tatb-based composite", "lx-17"] }
 
 [materials.material]
 model = "mat-null"
@@ -274,4 +274,3 @@ $#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
 $#   grow2       ar2       es2        en     fmxgr     fmngr
       30.0     0.667     0.667       1.0       0.8       0.8
 """
-

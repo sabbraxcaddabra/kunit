@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru" class="h-full">
+<html lang="{{ lang }}" class="h-full">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Результат — kunit</title>
+    <title>{{ _("Результат — kunit") }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       #diff-grid {
@@ -22,11 +22,20 @@
     <div class="max-w-6xl mx-auto px-4 py-10 space-y-6">
       <div class="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">Результат конвертации</p>
+          <p class="text-sm uppercase tracking-wide text-slate-500 font-semibold">{{ _("Результат конвертации") }}</p>
           <h1 class="text-3xl font-semibold leading-tight">{{ out_name }}</h1>
           <p class="text-slate-600">{{ unit_labels.get(src, src) }} → {{ unit_labels.get(dst, dst) }} · {{ ", ".join(models) }}</p>
         </div>
-        <form method="post" action="/download" class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
+          <form method="post" action="/lang" class="inline-flex items-center gap-2">
+            <input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}" />
+            <select name="lang" class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-sky-400" onchange="this.form.submit()">
+              {% for code, label in languages %}
+              <option value="{{ code }}" {% if lang == code %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </form>
+          <form method="post" action="/download" class="flex items-center gap-3">
           <input type="hidden" name="src" value="{{ src }}">
           <input type="hidden" name="dst" value="{{ dst }}">
           <input type="hidden" name="out_name" value="{{ out_name }}">
@@ -34,21 +43,22 @@
             <input type="hidden" name="models" value="{{ m }}">
           {% endfor %}
           <textarea name="payload" class="hidden">{{ payload }}</textarea>
-          <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скачать файл</button>
-        </form>
+          <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">{{ _("Скачать файл") }}</button>
+          </form>
+        </div>
       </div>
 
       <div class="grid md:grid-cols-3 gap-4">
         <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4">
-          <p class="text-sm text-slate-500">Изменённых строк</p>
+          <p class="text-sm text-slate-500">{{ _("Изменённых строк") }}</p>
           <p class="text-2xl font-semibold">{{ preview.changed_lines }}</p>
         </div>
         <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 md:col-span-2">
-          <p class="text-sm text-slate-500 mb-2">Кратко</p>
+          <p class="text-sm text-slate-500 mb-2">{{ _("Кратко") }}</p>
           <div class="grid sm:grid-cols-2 gap-3 text-sm text-slate-700">
-            <div><span class="text-slate-500">Модели:</span> {{ ", ".join(models) }}</div>
-            <div><span class="text-slate-500">Файл:</span> {{ out_name }}</div>
-            <div class="md:col-span-2 text-slate-500">Скачивание формирует файл заново из исходного текста.</div>
+            <div><span class="text-slate-500">{{ _("Модели:") }}</span> {{ ", ".join(models) }}</div>
+            <div><span class="text-slate-500">{{ _("Файл:") }}</span> {{ out_name }}</div>
+            <div class="md:col-span-2 text-slate-500">{{ _("Скачивание формирует файл заново из исходного текста.") }}</div>
           </div>
         </div>
       </div>
@@ -56,12 +66,12 @@
       <div class="rounded-2xl bg-white border border-slate-200 shadow-sm p-4 space-y-4">
         <div class="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h3 class="text-lg font-semibold">Текст до/после</h3>
-            <p class="text-sm text-slate-500">Полный исходник слева, результат справа. Можно скрывать любую колонку для удобства.</p>
+            <h3 class="text-lg font-semibold">{{ _("Текст до/после") }}</h3>
+            <p class="text-sm text-slate-500">{{ _("Полный исходник слева, результат справа. Можно скрывать любую колонку для удобства.") }}</p>
           </div>
           <div class="flex items-center gap-3 flex-wrap">
-            <button id="toggle-input" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скрыть исходник</button>
-            <button id="toggle-result" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">Скрыть результат</button>
+            <button id="toggle-input" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">{{ _("Скрыть исходник") }}</button>
+            <button id="toggle-result" type="button" class="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500">{{ _("Скрыть результат") }}</button>
           </div>
         </div>
 
@@ -69,7 +79,7 @@
           <div id="input-column" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
             <div class="flex items-center justify-between gap-2">
               <div>
-                <h4 class="text-sm font-semibold">Исходный текст</h4>
+                <h4 class="text-sm font-semibold">{{ _("Исходный текст") }}</h4>
                 <p class="text-xs text-slate-500">{{ unit_labels.get(src, src) }}</p>
               </div>
               <button type="button" class="copy-btn inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-2.5 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-target="converted-input">
@@ -82,7 +92,7 @@
           <div id="result-column" class="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
             <div class="flex items-center justify-between gap-2">
               <div>
-                <h4 class="text-sm font-semibold">Результат</h4>
+                <h4 class="text-sm font-semibold">{{ _("Результат") }}</h4>
                 <p class="text-xs text-slate-500">{{ unit_labels.get(dst, dst) }}</p>
               </div>
               <button type="button" class="copy-btn inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white/90 px-2.5 py-2 shadow-sm hover:border-sky-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-500" data-target="converted-output">
@@ -97,6 +107,11 @@
 
     <script>
       (function(){
+        const MSG_SHOW_INPUT = "{{ _('Показать исходник') }}";
+        const MSG_HIDE_INPUT = "{{ _('Скрыть исходник') }}";
+        const MSG_SHOW_RESULT = "{{ _('Показать результат') }}";
+        const MSG_HIDE_RESULT = "{{ _('Скрыть результат') }}";
+
         const copyButtons = Array.from(document.querySelectorAll('.copy-btn'));
         const grid = document.getElementById('diff-grid');
         const inputColumn = document.getElementById('input-column');
@@ -134,8 +149,8 @@
               grid.classList.add('two-columns');
             }
           }
-          if (toggleInput) toggleInput.textContent = inputHidden ? 'Показать исходник' : 'Скрыть исходник';
-          if (toggle) toggle.textContent = resultHidden ? 'Показать результат' : 'Скрыть результат';
+          if (toggleInput) toggleInput.textContent = inputHidden ? MSG_SHOW_INPUT : MSG_HIDE_INPUT;
+          if (toggle) toggle.textContent = resultHidden ? MSG_SHOW_RESULT : MSG_HIDE_RESULT;
         }
 
         toggleInput?.addEventListener('click', () => {

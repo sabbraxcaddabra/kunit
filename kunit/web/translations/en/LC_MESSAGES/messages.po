@@ -1,0 +1,223 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: kunit\\n"
+"Language: en\\n"
+"Content-Type: text/plain; charset=UTF-8\\n"
+"Content-Transfer-Encoding: 8bit\\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\\n"
+
+msgid "kunit — Конвертер единиц LS-DYNA"
+msgstr "kunit — LS-DYNA unit converter"
+
+msgid "kunit — конвертер единиц"
+msgstr "kunit — unit converter"
+
+msgid "Преобразуйте модели между системами единиц, сохраняя фиксированную ширину."
+msgstr "Convert models between unit systems while preserving fixed-width formatting."
+
+msgid "Библиотека материалов"
+msgstr "Materials library"
+
+msgid "Файл (.k)"
+msgstr "File (.k)"
+
+msgid "Файл приоритетен, если вставка пустая."
+msgstr "The file takes precedence if the paste area is empty."
+
+msgid "Исходные единицы"
+msgstr "Source units"
+
+msgid "Перевести в"
+msgstr "Convert to"
+
+msgid "Целевые единицы"
+msgstr "Target units"
+
+msgid "Модели"
+msgstr "Models"
+
+msgid "Имя файла результата"
+msgstr "Output file name"
+
+msgid "Конвертировать"
+msgstr "Convert"
+
+msgid "Состояние формы сохраняется локально."
+msgstr "The form state is saved locally."
+
+msgid "Или вставьте текст"
+msgstr "Or paste text"
+
+msgid "Вставьте содержимое .k..."
+msgstr "Paste the .k content…"
+
+msgid "Результат — kunit"
+msgstr "Result — kunit"
+
+msgid "Результат конвертации"
+msgstr "Conversion result"
+
+msgid "Скачать файл"
+msgstr "Download file"
+
+msgid "Изменённых строк"
+msgstr "Changed lines"
+
+msgid "Кратко"
+msgstr "Summary"
+
+msgid "Модели:"
+msgstr "Models:"
+
+msgid "Файл:"
+msgstr "File:"
+
+msgid "Скачивание формирует файл заново из исходного текста."
+msgstr "Download regenerates the file from the original input."
+
+msgid "Текст до/после"
+msgstr "Before/after"
+
+msgid "Полный исходник слева, результат справа. Можно скрывать любую колонку для удобства."
+msgstr "The full input is on the left, the result is on the right. You can hide either column for convenience."
+
+msgid "Скрыть исходник"
+msgstr "Hide input"
+
+msgid "Скрыть результат"
+msgstr "Hide result"
+
+msgid "Исходный текст"
+msgstr "Input"
+
+msgid "Результат"
+msgstr "Result"
+
+msgid "Показать исходник"
+msgstr "Show input"
+
+msgid "Показать результат"
+msgstr "Show result"
+
+msgid "Библиотека материалов — kunit"
+msgstr "Materials library — kunit"
+
+msgid "Карты материалов"
+msgstr "Material cards"
+
+msgid "Просматривайте встроенные карты: название, текст карты, ключевые слова и размерность. Можно выбрать несколько и экспортировать в нужные единицы."
+msgstr "Browse built-in cards: name, card text, keywords and unit system. You can select multiple and export them to the desired units."
+
+msgid "Всего: %(count)s"
+msgstr "Total: %(count)s"
+
+msgid "К конвертеру"
+msgstr "Back to converter"
+
+msgid "Поиск и фильтры"
+msgstr "Search & filters"
+
+msgid "Ищите по названию, модели или ключевым словам."
+msgstr "Search by name, model, or keywords."
+
+msgid "Свернуть список"
+msgstr "Collapse list"
+
+msgid "Показано: %(shown)s из %(total)s"
+msgstr "Showing: %(shown)s of %(total)s"
+
+msgid "Поиск по названию"
+msgstr "Search by name"
+
+msgid "Например: Steel"
+msgstr "e.g. Steel"
+
+msgid "Модель или EOS"
+msgstr "Model or EOS"
+
+msgid "Все варианты"
+msgstr "All"
+
+msgid "Материальные модели"
+msgstr "Material models"
+
+msgid "Уравнения состояния"
+msgstr "Equations of state"
+
+msgid "Ключевые слова или теги"
+msgstr "Keywords or tags"
+
+msgid "Например: взрыв, броня"
+msgstr "e.g. blast, armor"
+
+msgid "Список материалов свернут"
+msgstr "Material list collapsed"
+
+msgid "Разверните, чтобы выбрать дополнительные материалы."
+msgstr "Expand to select additional materials."
+
+msgid "Показать список"
+msgstr "Show list"
+
+msgid "Модели: %(models)s · Размерность: %(units)s"
+msgstr "Models: %(models)s · Units: %(units)s"
+
+msgid "Текст"
+msgstr "Text"
+
+msgid "Копировать"
+msgstr "Copy"
+
+msgid "По текущим фильтрам ничего не найдено."
+msgstr "No results match the current filters."
+
+msgid "Назад"
+msgstr "Previous"
+
+msgid "Вперед"
+msgstr "Next"
+
+msgid "Страница 1"
+msgstr "Page 1"
+
+msgid "Экспортировать в единицы"
+msgstr "Export to units"
+
+msgid "Имя файла для выгрузки"
+msgstr "Export file name"
+
+msgid "Экспортировать выбранные"
+msgstr "Export selected"
+
+msgid "Можно сразу скопировать результат или скачать файл."
+msgstr "You can copy the result or download a file."
+
+msgid "Результат экспорта"
+msgstr "Export result"
+
+msgid "Сконвертировано в %(units)s."
+msgstr "Converted to %(units)s."
+
+msgid "Скачать"
+msgstr "Download"
+
+msgid "Найдено: %(count)s · Страница %(page)s/%(pages)s"
+msgstr "Found: %(count)s · Page %(page)s/%(pages)s"
+
+msgid "Ничего не найдено"
+msgstr "No results"
+
+msgid "Страница %(page)s из %(pages)s"
+msgstr "Page %(page)s of %(pages)s"
+
+msgid "Нужно вставить текст или выбрать файл"
+msgstr "You need to paste text or choose a file"
+
+msgid "Ошибка конвертации: %(error)s"
+msgstr "Conversion error: %(error)s"
+
+msgid "Нужно выбрать хотя бы один материал"
+msgstr "You need to select at least one material"
+
+msgid "Ошибка экспорта материалов: %(error)s"
+msgstr "Materials export error: %(error)s"
