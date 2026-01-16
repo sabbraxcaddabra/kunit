@@ -1,0 +1,65 @@
+[[materials]]
+id = "al-2024(jc)"
+name = { ru = "Алюминий AL2024", en = "Aluminium AL2024" }
+reference = "https://example.com/hexolite"
+comment = { ru = "Алюминий AL2024 (аналог отечественного Д16)", en = "Aluminium AL2024" }
+tags = { ru = ["алюминий", "кумулятивная облицовка", "корпус"], en = ["aluminium", "shaped charge liner", "cases"] }
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+MAT_AL2024
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        42     2.785      27.6       0.0       0.0       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+     0.265     0.426      0.34     0.015       1.0     775.0     293.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+8.75000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5c2/p/xnp/d      erod     efmin    numint         k      eps1
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+EOS_AL2024
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        32     5.328     1.338       0.0       0.0       2.0       0.0       0.0
+$#      v0    unused      lcid
+       0.0                   0
+"""
+
+[[materials]]
+id = "steel-aisi-1045(jc)"
+name = { ru = "Сталь AISI-1045", en = "Steel AISI-1045" }
+reference = "https://example.com/hexolite"
+comment = { ru = "Сталь Сталь AISI-1045 (аналог стали 45)", en = "Steel AISI-1045" }
+tags = { ru = ["медь", "корпус"], en = ["copper", "cases"] }
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+MAT_St_1045
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        46      7.85      78.0       0.0       0.0       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+     0.553       0.6     0.234     0.026       1.0    1733.0     293.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+4.52000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5c2/p/xnp/d      erod     efmin    numint         k      eps1
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+EOS_St_1045
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        36     4.569      1.49       0.0       0.0      2.17       0.0       0.0
+$#      v0    unused      lcid
+       0.0                   0
+"""
