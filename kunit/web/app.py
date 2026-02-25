@@ -171,11 +171,18 @@ def create_app() -> Flask:
         materials = [_material_to_api_payload(item, lang) for item in materials_store.list_materials()]
         return jsonify({"materials": materials})
 
-    @app.post("/api/v1/materials/export")
-    def api_export_materials():
+    def _parse_export_request() -> tuple[object, str]:
+        if request.method == "GET":
+            material_ids = request.args.getlist("material_id")
+            dst_units = request.args.get("dst", get_unit_keys()[0])
+            return material_ids, str(dst_units)
+
         data = request.get_json(silent=True) or {}
-        material_ids = data.get("material_ids")
-        dst_units = data.get("dst", get_unit_keys()[0])
+        return data.get("material_ids"), str(data.get("dst", get_unit_keys()[0]))
+
+    @app.route("/api/v1/materials/export", methods=["GET", "POST"])
+    def api_export_materials():
+        material_ids, dst_units = _parse_export_request()
 
         if not isinstance(material_ids, list) or any(not isinstance(m, str) for m in material_ids):
             return jsonify({"error": "material_ids must be a list of strings"}), 400
@@ -186,13 +193,13 @@ def create_app() -> Flask:
             return jsonify({"error": "No materials matched the provided material_ids"}), 400
 
         try:
-            payload = _convert_material_records(selected, str(dst_units))
+            payload = _convert_material_records(selected, dst_units)
         except Exception as exc:
             return jsonify({"error": f"Material export failed: {exc}"}), 400
 
         return jsonify(
             {
-                "dst": str(dst_units),
+                "dst": dst_units,
                 "count": len(selected),
                 "material_ids": [m.material_id for m in selected],
                 "payload": payload,

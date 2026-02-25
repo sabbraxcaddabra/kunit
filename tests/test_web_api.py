@@ -43,6 +43,25 @@ def test_api_export_materials_returns_payload():
     assert data["payload"].strip()
 
 
+def test_api_export_materials_supports_get_query_params():
+    client = _client()
+
+    materials = client.get("/api/v1/materials").get_json()["materials"]
+    selected_id = materials[0]["id"]
+
+    resp = client.get(
+        "/api/v1/materials/export",
+        query_string={"material_id": [selected_id], "dst": "m-kg-s"},
+    )
+
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["count"] == 1
+    assert data["material_ids"] == [selected_id]
+    assert isinstance(data["payload"], str)
+    assert data["payload"].strip()
+
+
 def test_api_convert_returns_converted_text():
     client = _client()
 
