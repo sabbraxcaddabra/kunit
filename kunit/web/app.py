@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Sequence
 
-from flask import Flask, redirect, render_template, request, send_file
+from flask import Flask, jsonify, redirect, render_template, request, send_file
 from flask_babel import Babel, get_locale, gettext as _
 
 from kunit.api import convert_string, get_unit_descriptors, get_unit_keys, list_models
@@ -92,6 +92,18 @@ def create_app() -> Flask:
             after_snippet="\n".join(after_lines[:max_lines]),
         )
 
+    def _material_to_api_payload(material: MaterialRecord, lang: str) -> dict[str, object]:
+        return {
+            "id": material.material_id,
+            "name": material.display_name(lang),
+            "comment": material.display_comment(lang),
+            "tags": list(material.display_tags(lang)),
+            "reference": material.reference,
+            "models": list(material.models),
+            "units": material.units,
+            "source": material.source,
+        }
+
     @app.context_processor
     def _inject_i18n():
         lang = str(get_locale())
@@ -152,6 +164,89 @@ def create_app() -> Flask:
         resp = redirect(next_url)
         resp.set_cookie("lang", lang, max_age=60 * 60 * 24 * 365, samesite="Lax")
         return resp
+
+    @app.get("/api/v1/materials")
+    def api_list_materials():
+        lang = str(get_locale())
+        materials = [_material_to_api_payload(item, lang) for item in materials_store.list_materials()]
+        return jsonify({"materials": materials})
+
+    def _parse_export_request() -> tuple[object, str]:
+        if request.method == "GET":
+            material_ids = request.args.getlist("material_id")
+            dst_units = request.args.get("dst", get_unit_keys()[0])
+            return material_ids, str(dst_units)
+
+        data = request.get_json(silent=True) or {}
+        return data.get("material_ids"), str(data.get("dst", get_unit_keys()[0]))
+
+    @app.route("/api/v1/materials/export", methods=["GET", "POST"])
+    def api_export_materials():
+        material_ids, dst_units = _parse_export_request()
+
+        if not isinstance(material_ids, list) or any(not isinstance(m, str) for m in material_ids):
+            return jsonify({"error": "material_ids must be a list of strings"}), 400
+
+        selected_ids = set(material_ids)
+        selected = [m for m in materials_store.list_materials() if m.material_id in selected_ids]
+        if not selected:
+            return jsonify({"error": "No materials matched the provided material_ids"}), 400
+
+        try:
+            payload = _convert_material_records(selected, dst_units)
+        except Exception as exc:
+            return jsonify({"error": f"Material export failed: {exc}"}), 400
+
+        return jsonify(
+            {
+                "dst": dst_units,
+                "count": len(selected),
+                "material_ids": [m.material_id for m in selected],
+                "payload": payload,
+            }
+        )
+
+    @app.post("/api/v1/convert")
+    def api_convert():
+        data = request.get_json(silent=True) or {}
+        text = data.get("text")
+        src = data.get("src")
+        dst = data.get("dst")
+        models = data.get("models", "all")
+        custom_transforms = data.get("custom_transforms")
+
+        if not isinstance(text, str) or not text.strip():
+            return jsonify({"error": "text must be a non-empty string"}), 400
+        if not isinstance(src, str) or not src:
+            return jsonify({"error": "src must be provided"}), 400
+        if not isinstance(dst, str) or not dst:
+            return jsonify({"error": "dst must be provided"}), 400
+        if not (
+            models == "all"
+            or isinstance(models, str)
+            or (isinstance(models, list) and all(isinstance(item, str) for item in models))
+        ):
+            return jsonify({"error": "models must be 'all', a string, or a list of strings"}), 400
+
+        try:
+            converted = convert_string(
+                text,
+                src=src,
+                dst=dst,
+                models=models,
+                custom_transforms=custom_transforms,
+            )
+        except Exception as exc:
+            return jsonify({"error": f"Conversion failed: {exc}"}), 400
+
+        return jsonify(
+            {
+                "src": src,
+                "dst": dst,
+                "models": models,
+                "converted": converted,
+            }
+        )
 
     @app.get("/")
     def index():
