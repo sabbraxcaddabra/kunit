@@ -3,6 +3,7 @@ from .eos_ignition_growth import SPEC as EOS_IGNITION_GROWTH
 from .eos_jwl import SPEC as EOS_JWL
 from .eos_jwlb import SPEC as EOS_JWLB
 from .mat_high_explosive_burn import SPEC as MAT_HE_BURN
+from .mat_elastic_plastic_hydro import SPEC as MAT_ELASTIC_PLASTIC_HYDRO
 from .mat_johnson_cook import SPEC as MAT_JC
 from .mat_null import SPEC as MAT_NULL
 
@@ -10,6 +11,7 @@ from .mat_null import SPEC as MAT_NULL
 ALL_SPECS = [
     MAT_JC,
     MAT_NULL,
+    MAT_ELASTIC_PLASTIC_HYDRO,
     EOS_GRUNEISEN,
     EOS_JWL,
     EOS_JWLB,
