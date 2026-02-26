@@ -85,6 +85,145 @@ text = "*MAT_JOHNSON_COOK"
         store.list_materials()
 
 
+def test_legacy_reference_is_converted_to_references(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        """
+[[materials]]
+id = "legacy-ref"
+name = { ru = "Пример", en = "Sample" }
+comment = { ru = "Описание", en = "Description" }
+model = "mat-jc"
+units = "mm-mg-us"
+tags = { ru = ["alpha"], en = ["alpha"] }
+reference = "https://example.com/ref"
+text = "*MAT_JOHNSON_COOK"
+""",
+    )
+
+    material = MaterialStore(tmp_path).list_materials()[0]
+
+    assert material.reference == "https://example.com/ref"
+    assert len(material.references) == 1
+    assert material.references[0]["url"] == "https://example.com/ref"
+    assert material.references[0]["title"] == {
+        "ru": "https://example.com/ref",
+        "en": "https://example.com/ref",
+    }
+
+
+def test_references_table_parsed_with_normalization(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        """
+[[materials]]
+id = "new-ref"
+name = { ru = "Пример", en = "Sample" }
+comment = { ru = "Описание", en = "Description" }
+model = "mat-jc"
+units = "mm-mg-us"
+tags = { ru = ["alpha"], en = ["alpha"] }
+text = "*MAT_JOHNSON_COOK"
+
+[[materials.references]]
+title = { ru = "Статья", en = "Paper" }
+url = " https://example.com/paper "
+kind = "paper"
+publisher = " Elsevier "
+authors = [" A. Author ", "", "B. Author"]
+year = 2020
+doi = " 10.1234/abcd "
+accessed = "2025-01-31"
+note = { ru = " примечание ", en = " note " }
+
+[[materials.references]]
+doi = "10.2222/xyz"
+""",
+    )
+
+    material = MaterialStore(tmp_path).list_materials()[0]
+
+    assert material.reference == "https://example.com/paper"
+    assert len(material.references) == 2
+
+    first = material.references[0]
+    assert first["title"] == {"ru": "Статья", "en": "Paper"}
+    assert first["url"] == "https://example.com/paper"
+    assert first["kind"] == "paper"
+    assert first["publisher"] == "Elsevier"
+    assert first["authors"] == ["A. Author", "B. Author"]
+    assert first["year"] == 2020
+    assert first["doi"] == "10.1234/abcd"
+    assert first["accessed"] == "2025-01-31"
+    assert first["note"] == {"ru": "примечание", "en": "note"}
+
+    second = material.references[1]
+    assert second["title"] is None
+    assert second["url"] is None
+    assert second["doi"] == "10.2222/xyz"
+
+
+def test_references_validation_errors(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        """
+[[materials]]
+id = "bad-ref"
+name = { ru = "Пример", en = "Sample" }
+comment = { ru = "Описание", en = "Description" }
+model = "mat-jc"
+units = "mm-mg-us"
+tags = { ru = ["alpha"], en = ["alpha"] }
+text = "*MAT_JOHNSON_COOK"
+
+[[materials.references]]
+url = "ftp://example.com/ref"
+""",
+    )
+
+    with pytest.raises(ValueError, match="http/https"):
+        MaterialStore(tmp_path).list_materials()
+
+    _write_material(
+        tmp_path,
+        """
+[[materials]]
+id = "bad-ref-2"
+name = { ru = "Пример", en = "Sample" }
+comment = { ru = "Описание", en = "Description" }
+model = "mat-jc"
+units = "mm-mg-us"
+tags = { ru = ["alpha"], en = ["alpha"] }
+text = "*MAT_JOHNSON_COOK"
+
+[[materials.references]]
+title = { ru = "", en = "" }
+""",
+    )
+    with pytest.raises(ValueError, match="references\\.title\\.ru"):
+        MaterialStore(tmp_path).list_materials()
+
+    _write_material(
+        tmp_path,
+        """
+[[materials]]
+id = "bad-ref-3"
+name = { ru = "Пример", en = "Sample" }
+comment = { ru = "Описание", en = "Description" }
+model = "mat-jc"
+units = "mm-mg-us"
+tags = { ru = ["alpha"], en = ["alpha"] }
+text = "*MAT_JOHNSON_COOK"
+
+[[materials.references]]
+doi = "10.1111/example"
+year = 1500
+""",
+    )
+    with pytest.raises(ValueError, match="references\\.year"):
+        MaterialStore(tmp_path).list_materials()
+
+
 def test_multi_block_material_conversion(tmp_path: Path):
     _write_material(
         tmp_path,
