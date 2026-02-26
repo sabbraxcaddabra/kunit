@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 from pathlib import Path
+from urllib.parse import urlparse
 from typing import Any, Iterable, List, Mapping, Sequence
 
 import tomllib
@@ -94,6 +96,160 @@ def _parse_i18n_tags(
     return out
 
 
+def _optional_text(value: object) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError("Expected string value")
+    text = value.strip()
+    return text or None
+
+
+def _parse_references(
+    raw_references: object,
+    *,
+    legacy_reference: object,
+    material_id: str,
+    source_path: Path,
+) -> List[Mapping[str, Any]]:
+    references: List[Mapping[str, Any]] = []
+
+    if raw_references is not None:
+        if not isinstance(raw_references, list):
+            raise ValueError(
+                f"Field 'references' for material '{material_id}' in {source_path} must be an array of objects"
+            )
+        references.extend(
+            _parse_reference_item(item, material_id=material_id, source_path=source_path)
+            for item in raw_references
+        )
+
+    if legacy_reference is not None:
+        legacy_url = _optional_text(legacy_reference)
+        if legacy_url is not None:
+            references.append(
+                {
+                    "title": {"ru": legacy_url, "en": legacy_url},
+                    "url": legacy_url,
+                    "kind": None,
+                    "publisher": None,
+                    "authors": [],
+                    "year": None,
+                    "doi": None,
+                    "accessed": None,
+                    "note": None,
+                }
+            )
+
+    return references
+
+
+def _parse_reference_item(
+    raw: object,
+    *,
+    material_id: str,
+    source_path: Path,
+) -> Mapping[str, Any]:
+    if not isinstance(raw, Mapping):
+        raise ValueError(
+            f"Each item in 'references' for material '{material_id}' in {source_path} must be an object"
+        )
+
+    title_raw = raw.get("title")
+    title: Mapping[str, str] | None = None
+    if title_raw is not None:
+        title = _parse_i18n_string(
+            title_raw,
+            field="references.title",
+            material_id=material_id,
+            source_path=source_path,
+        )
+
+    url = _optional_text(raw.get("url"))
+    if url is not None:
+        scheme = urlparse(url).scheme.lower()
+        if scheme not in {"http", "https"}:
+            raise ValueError(
+                f"Field 'references.url' for material '{material_id}' in {source_path} must use http/https"
+            )
+
+    doi = _optional_text(raw.get("doi"))
+
+    if title is None and url is None and doi is None:
+        raise ValueError(
+            f"Reference item for material '{material_id}' in {source_path} must include at least one of title/url/doi"
+        )
+
+    kind = _optional_text(raw.get("kind"))
+    valid_kinds = {"paper", "standard", "datasheet", "manual", "report", "vendor", "internal"}
+    if kind is not None and kind not in valid_kinds:
+        raise ValueError(
+            f"Field 'references.kind' for material '{material_id}' in {source_path} must be one of {sorted(valid_kinds)}"
+        )
+
+    publisher = _optional_text(raw.get("publisher"))
+
+    authors_raw = raw.get("authors")
+    authors: List[str] = []
+    if authors_raw is not None:
+        if not isinstance(authors_raw, Sequence) or isinstance(authors_raw, (str, bytes)):
+            raise ValueError(
+                f"Field 'references.authors' for material '{material_id}' in {source_path} must be a list of strings"
+            )
+        authors = []
+        for author in authors_raw:
+            clean = _optional_text(author)
+            if clean is not None:
+                authors.append(clean)
+
+    year_raw = raw.get("year")
+    year: int | None = None
+    if year_raw is not None:
+        if not isinstance(year_raw, int):
+            raise ValueError(
+                f"Field 'references.year' for material '{material_id}' in {source_path} must be an integer"
+            )
+        current_year = date.today().year + 1
+        if year_raw < 1800 or year_raw > current_year:
+            raise ValueError(
+                f"Field 'references.year' for material '{material_id}' in {source_path} must be between 1800 and {current_year}"
+            )
+        year = year_raw
+
+    accessed_raw = _optional_text(raw.get("accessed"))
+    accessed: str | None = None
+    if accessed_raw is not None:
+        try:
+            date.fromisoformat(accessed_raw)
+        except ValueError as exc:
+            raise ValueError(
+                f"Field 'references.accessed' for material '{material_id}' in {source_path} must be ISO date YYYY-MM-DD"
+            ) from exc
+        accessed = accessed_raw
+
+    note_raw = raw.get("note")
+    note: Mapping[str, str] | None = None
+    if note_raw is not None:
+        note = _parse_i18n_string(
+            note_raw,
+            field="references.note",
+            material_id=material_id,
+            source_path=source_path,
+        )
+
+    return {
+        "title": title,
+        "url": url,
+        "kind": kind,
+        "publisher": publisher,
+        "authors": authors,
+        "year": year,
+        "doi": doi,
+        "accessed": accessed,
+        "note": note,
+    }
+
+
 @dataclass(frozen=True)
 class MaterialSection:
     kind: str
@@ -116,6 +272,7 @@ class MaterialRecord:
     payload: str
     models: Sequence[str]
     reference: str | None = None
+    references: Sequence[Mapping[str, Any]] = field(default_factory=list)
     comment: str | None = None
     tags: Sequence[str] = field(default_factory=list)
     name_i18n: Mapping[str, str] = field(default_factory=dict)
@@ -239,9 +396,14 @@ class MaterialStore:
         )
         name = name_i18n["ru"]
 
-        reference = raw.get("reference")
-        if reference is not None and not isinstance(reference, str):
-            raise ValueError(f"Reference for material '{material_id}' must be a string if provided")
+        legacy_reference = raw.get("reference")
+        references = _parse_references(
+            raw.get("references"),
+            legacy_reference=legacy_reference,
+            material_id=material_id,
+            source_path=source_path,
+        )
+        reference = next((str(item["url"]) for item in references if item.get("url")), None)
 
         comment_i18n = _parse_i18n_string(
             raw.get("comment"),
@@ -319,6 +481,7 @@ class MaterialStore:
             payload=payload,
             models=models,
             reference=reference,
+            references=references,
             comment=comment,
             tags=list(tags),
             name_i18n=name_i18n,
