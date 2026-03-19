@@ -10,12 +10,37 @@ from flask_babel import Babel, get_locale, gettext as _
 
 from kunit.api import convert_string, get_unit_descriptors, get_unit_keys, list_models
 from kunit.core.units import UnitDescriptor
-from kunit.materials_store import MaterialRecord, MaterialStore, convert_materials
+from kunit.materials_store import (
+    MaterialRecord,
+    MaterialStore,
+    build_materials_export,
+    convert_materials,
+    parse_structured_material_group_request,
+    render_structured_material_groups,
+)
 from kunit.web.i18n import compile_translations
 
 
 def _convert_material_records(records: Sequence[MaterialRecord], dst_units: str) -> str:
     return convert_materials(records, dst_units)
+
+
+def _ordered_unique(values: Sequence[str]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            continue
+        seen.add(value)
+        ordered.append(value)
+    return ordered
+
+
+def _select_materials_in_order(
+    materials: Sequence[MaterialRecord], requested_ids: Sequence[str]
+) -> list[MaterialRecord]:
+    by_id = {material.material_id: material for material in materials}
+    return [by_id[material_id] for material_id in _ordered_unique(requested_ids) if material_id in by_id]
 
 _PRESSURE_UNIT_EN = {
     "Па": "Pa",
@@ -187,8 +212,7 @@ def create_app() -> Flask:
         if not isinstance(material_ids, list) or any(not isinstance(m, str) for m in material_ids):
             return jsonify({"error": "material_ids must be a list of strings"}), 400
 
-        selected_ids = set(material_ids)
-        selected = [m for m in materials_store.list_materials() if m.material_id in selected_ids]
+        selected = _select_materials_in_order(materials_store.list_materials(), material_ids)
         if not selected:
             return jsonify({"error": "No materials matched the provided material_ids"}), 400
 
@@ -334,10 +358,11 @@ def create_app() -> Flask:
 
     @app.post("/materials/export")
     def export_materials():
-        selected_ids = set(request.form.getlist("materials"))
+        selected_ids = _ordered_unique(request.form.getlist("materials"))
         dst_units = request.form.get("materials_dst", type=str)
         out_name = (request.form.get("materials_out_name", type=str) or "materials.k").strip()
-        selected = [m for m in materials_store.list_materials() if m.material_id in selected_ids]
+        structured_groups_state = request.form.get("structured_material_groups", type=str) or ""
+        selected = _select_materials_in_order(materials_store.list_materials(), selected_ids)
 
         if not selected:
             return (
@@ -348,13 +373,43 @@ def create_app() -> Flask:
                         selected_materials=selected_ids,
                         materials_dst=dst_units,
                         materials_out_name=out_name,
+                        structured_material_groups=structured_groups_state,
                     ),
                 ),
                 400,
             )
 
         try:
-            payload = _convert_material_records(selected, dst_units or get_unit_keys()[0])
+            export_result = build_materials_export(selected, dst_units or get_unit_keys()[0])
+            try:
+                groups_request = parse_structured_material_group_request(
+                    structured_groups_state,
+                    allowed_material_ids=set(selected_ids),
+                )
+                maps_payload = render_structured_material_groups(
+                    groups_request,
+                    export_result.assigned_ids,
+                )
+            except Exception as e:
+                return (
+                    render_template(
+                        "materials.html",
+                        **_materials_context(
+                            selected_materials=selected_ids,
+                            materials_dst=dst_units,
+                            materials_out_name=out_name,
+                            structured_material_groups=structured_groups_state,
+                            structured_material_groups_error=_(
+                                "Ошибка карт multimaterial: %(error)s",
+                                error=str(e),
+                            ),
+                        ),
+                    ),
+                    400,
+                )
+            payload = export_result.payload
+            if maps_payload:
+                payload = f"{payload.rstrip()}\n{maps_payload}"
         except Exception as e:
             return (
                 render_template(
@@ -364,6 +419,7 @@ def create_app() -> Flask:
                         selected_materials=selected_ids,
                         materials_dst=dst_units,
                         materials_out_name=out_name,
+                        structured_material_groups=structured_groups_state,
                     ),
                 ),
                 400,
@@ -375,6 +431,7 @@ def create_app() -> Flask:
                 selected_materials=selected_ids,
                 materials_dst=dst_units,
                 materials_out_name=out_name,
+                structured_material_groups=structured_groups_state,
                 materials_export=payload,
             ),
         )

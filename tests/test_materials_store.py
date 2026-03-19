@@ -5,7 +5,16 @@ import pytest
 
 from kunit.api import convert_string
 from kunit.core.fixed import format_lsdyna_10, join_fixed
-from kunit.materials_store import MaterialStore, convert_materials, export_materials
+from kunit.materials_store import (
+    AssignedMaterialIds,
+    MaterialStore,
+    StructuredMaterialGroupRequest,
+    build_materials_export,
+    convert_materials,
+    export_materials,
+    parse_structured_material_group_request,
+    render_structured_material_groups,
+)
 
 
 def _write_material(tmp_path: Path, content: str) -> Path:
@@ -489,3 +498,183 @@ def test_convert_materials_rewrites_identifiers(tmp_path: Path):
     assert lines[second_mat_idx + 2][:10].strip() == "2"
     second_eos_idx = lines.index("*EOS_JWL", second_mat_idx + 1)
     assert lines[second_eos_idx + 2][:10].strip() == "2"
+
+
+def test_build_materials_export_returns_assigned_mid_and_eosid_map(tmp_path: Path):
+    _write_material(
+        tmp_path,
+        textwrap.dedent(
+            '''
+            [[materials]]
+            id = "with-eos"
+            name = { ru = "With EOS", en = "With EOS" }
+            comment = { ru = "Описание", en = "Description" }
+            tags = { ru = ["he"], en = ["he"] }
+
+            [materials.material]
+            model = "mat-he-burn"
+            units = "mm-mg-us"
+            payload = """*MAT_HIGH_EXPLOSIVE_BURN
+            $#     mid        ro         d       pcj      beta         k         g      sigy
+                    8       1.2       2.0       3.0       0.0       0.0       0.0       4.0
+            """
+
+            [materials.eos]
+            model = "eos-jwl"
+            units = "mm-mg-us"
+            payload = """*EOS_JWL
+            $#   eosid         a         b        r1        r2      omeg        e0        vo
+                   18      10.0      20.0       1.0       2.0       3.0      60.0       0.5
+            """
+
+            [[materials]]
+            id = "without-eos"
+            name = { ru = "No EOS", en = "No EOS" }
+            comment = { ru = "Описание", en = "Description" }
+            model = "mat-jc"
+            units = "mm-mg-us"
+            tags = { ru = ["solid"], en = ["solid"] }
+            text = """*MAT_JOHNSON_COOK
+            $#     mid        ro         a         b         n         c         m    tmelt
+                   77       7.8     500.0      10.0       0.2      0.01       1.0     800.0
+            """
+            '''
+        ),
+    )
+
+    materials = MaterialStore(tmp_path).list_materials()
+
+    export = build_materials_export(materials, "mm-mg-us")
+
+    assert export.assigned_ids["with-eos"].mid == 1
+    assert export.assigned_ids["with-eos"].eosid == 1
+    assert export.assigned_ids["without-eos"].mid == 2
+    assert export.assigned_ids["without-eos"].eosid == 0
+    assert export.payload.count("*MAT_") == 2
+
+
+@pytest.mark.parametrize("block_type", ["3D", "AXISYM", "PLNEPS"])
+def test_parse_structured_material_group_request_accepts_supported_block_types(block_type):
+    request = parse_structured_material_group_request(
+        {
+            "blocks": [
+                {
+                    "type": block_type,
+                    "rows": [
+                        {
+                            "ammgnm": "HE1",
+                            "material_id": "mat-1",
+                            "pref": "1.25",
+                        }
+                    ],
+                }
+            ]
+        },
+        allowed_material_ids={"mat-1"},
+    )
+
+    assert isinstance(request, StructuredMaterialGroupRequest)
+    assert [block.block_type for block in request.blocks] == [block_type]
+    assert request.blocks[0].rows[0].material_id == "mat-1"
+    assert request.blocks[0].rows[0].pref == "1.25"
+
+
+def test_parse_structured_material_group_request_allows_long_material_ids():
+    request = parse_structured_material_group_request(
+        {
+            "blocks": [
+                {
+                    "type": "3D",
+                    "rows": [
+                        {
+                            "ammgnm": "AL",
+                            "material_id": "al-2024(jc)",
+                            "pref": "",
+                        }
+                    ],
+                }
+            ]
+        },
+        allowed_material_ids={"al-2024(jc)"},
+    )
+
+    assert request.blocks[0].rows[0].material_id == "al-2024(jc)"
+
+
+def test_parse_structured_material_group_request_rejects_multiple_blocks():
+    with pytest.raises(ValueError, match="single block"):
+        parse_structured_material_group_request(
+            {
+                "blocks": [
+                    {"type": "3D", "rows": [{"ammgnm": "A", "material_id": "mat-1"}]},
+                    {"type": "AXISYM", "rows": [{"ammgnm": "B", "material_id": "mat-1"}]},
+                ]
+            },
+            allowed_material_ids={"mat-1"},
+        )
+
+
+@pytest.mark.parametrize(
+    ("payload", "message"),
+    [
+        (
+            {"blocks": [{"type": "3D", "rows": [{"ammgnm": "", "material_id": "mat-1"}]}]},
+            "ammgnm",
+        ),
+        (
+            {"blocks": [{"type": "BAD", "rows": [{"ammgnm": "HE1", "material_id": "mat-1"}]}]},
+            "AXISYM",
+        ),
+        (
+            {"blocks": [{"type": "3D", "rows": [{"ammgnm": "HE1", "material_id": ""}]}]},
+            "material_id",
+        ),
+        (
+            {"blocks": [{"type": "3D", "rows": [{"ammgnm": "HE1", "material_id": "mat-1", "pref": "12345678901"}]}]},
+            "pref",
+        ),
+        (
+            {"blocks": [{"type": "3D", "rows": [{"ammgnm": "ABCDEFGHIJK", "material_id": "mat-1"}]}]},
+            "10 characters",
+        ),
+        (
+            {"blocks": [{"type": "3D", "rows": [{"ammgnm": "HE1", "material_id": "mat-9"}]}]},
+            "selected material",
+        ),
+    ],
+)
+def test_parse_structured_material_group_request_validates_input(payload, message):
+    with pytest.raises(ValueError, match=message):
+        parse_structured_material_group_request(payload, allowed_material_ids={"mat-1"})
+
+
+def test_render_structured_material_groups_renders_3d_without_suffix_and_defaults_pref():
+    request = parse_structured_material_group_request(
+        {
+            "blocks": [
+                {
+                    "type": "3D",
+                    "rows": [
+                        {"ammgnm": "VAC", "material_id": "mat-1", "pref": ""},
+                        {"ammgnm": "HE", "material_id": "mat-2", "pref": "1.5"},
+                    ],
+                }
+            ]
+        },
+        allowed_material_ids={"mat-1", "mat-2"},
+    )
+
+    rendered = render_structured_material_groups(
+        request,
+        {
+            "mat-1": AssignedMaterialIds(mid=1, eosid=0),
+            "mat-2": AssignedMaterialIds(mid=2, eosid=2),
+        },
+    )
+
+    assert rendered.startswith("*ALE_STRUCTURED_MULTI-MATERIAL_GROUP\n")
+    assert "*ALE_STRUCTURED_MULTI-MATERIAL_GROUP_3D" not in rendered
+    assert rendered.count("$#  ammgnm") == 1
+    lines = rendered.splitlines()
+    assert lines[2] == join_fixed(["VAC", "1", "0", "", "", "", "", "0.0"]).rstrip()
+    assert lines[3] == join_fixed(["HE", "2", "2", "", "", "", "", "1.5"]).rstrip()

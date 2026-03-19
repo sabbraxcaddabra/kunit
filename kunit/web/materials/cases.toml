@@ -64,26 +64,3 @@ $#      v0    unused      lcid
        0.0                   0
 """
 
-[[materials]]
-id = "steel(m10)"
-name = { ru = "Сталь (MAT_010)", en = "Steel (MAT_010)" }
-reference = "https://example.com/mat010"
-comment = { ru = "Пример материала на модели MAT_ELASTIC_PLASTIC_HYDRO", en = "Example material using MAT_ELASTIC_PLASTIC_HYDRO" }
-tags = { ru = ["сталь", "mat_010"], en = ["steel", "mat_010"] }
-
-[materials.material]
-model = "mat-elastic-plastic-hydro"
-units = "mm-mg-us"
-payload = """*MAT_ELASTIC_PLASTIC_HYDRO_TITLE
-Steel-M10
-$#     mid        ro         g      sig0        eh        pc        fs     charl
-       301     7.850      80.0      0.25      0.15       0.0      0.30       2.0
-$#     eps1      eps2      eps3      eps4      eps5      eps6      eps7      eps8
-       0.0      0.01      0.02      0.03      0.04      0.05      0.06      0.07
-$#     eps9     eps10     eps11     eps12     eps13     eps14     eps15     eps16
-      0.08      0.09      0.10      0.11      0.12      0.13      0.14      0.15
-$#      es1       es2       es3       es4       es5       es6       es7       es8
-      0.25      0.30      0.35      0.40      0.45      0.50      0.55      0.60
-$#      es9      es10      es11      es12      es13      es14      es15      es16
-      0.65      0.70      0.75      0.80      0.85      0.90      0.95      1.00
-"""

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
@@ -312,6 +313,182 @@ class MaterialRecord:
         return "".join(section.to_k() for section in self.sections)
 
 
+@dataclass(frozen=True)
+class AssignedMaterialIds:
+    mid: int
+    eosid: int
+
+
+@dataclass(frozen=True)
+class MaterialExportResult:
+    payload: str
+    assigned_ids: Mapping[str, AssignedMaterialIds]
+
+
+@dataclass(frozen=True)
+class StructuredMaterialGroupRow:
+    ammgnm: str
+    material_id: str
+    pref: str = ""
+
+
+@dataclass(frozen=True)
+class StructuredMaterialGroupBlock:
+    block_type: str
+    rows: Sequence[StructuredMaterialGroupRow]
+
+
+@dataclass(frozen=True)
+class StructuredMaterialGroupRequest:
+    blocks: Sequence[StructuredMaterialGroupBlock]
+
+
+_STRUCTURED_GROUP_BLOCK_TYPES = {"AXISYM", "PLNEPS", "3D"}
+_STRUCTURED_GROUP_MAX_FIELD_LENGTH = 10
+_STRUCTURED_GROUP_COMMENT = (
+    "$#  ammgnm       mid     eosid         -         -         -         -      pref\n"
+)
+
+
+def _normalize_group_text_field(
+    raw: object, *, field_name: str, allow_empty: bool = False
+) -> str:
+    if raw is None:
+        if allow_empty:
+            return ""
+        raise ValueError(f"Field '{field_name}' is required")
+    if not isinstance(raw, str):
+        raise ValueError(f"Field '{field_name}' must be a string")
+
+    value = raw.strip()
+    if not value and not allow_empty:
+        raise ValueError(f"Field '{field_name}' is required")
+    if len(value) > _STRUCTURED_GROUP_MAX_FIELD_LENGTH:
+        raise ValueError(
+            f"Field '{field_name}' must fit into 10 characters"
+        )
+    return value
+
+
+def _normalize_group_material_id(raw: object) -> str:
+    if raw is None:
+        raise ValueError("Field 'material_id' is required")
+    if not isinstance(raw, str):
+        raise ValueError("Field 'material_id' must be a string")
+
+    value = raw.strip()
+    if not value:
+        raise ValueError("Field 'material_id' is required")
+    return value
+
+
+def parse_structured_material_group_request(
+    raw: object, *, allowed_material_ids: set[str] | None = None
+) -> StructuredMaterialGroupRequest:
+    if raw is None:
+        return StructuredMaterialGroupRequest(blocks=[])
+    if isinstance(raw, str):
+        if not raw.strip():
+            return StructuredMaterialGroupRequest(blocks=[])
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise ValueError("Structured material groups payload must be valid JSON") from exc
+
+    if not isinstance(raw, Mapping):
+        raise ValueError("Structured material groups payload must be an object")
+
+    raw_blocks = raw.get("blocks", [])
+    if raw_blocks is None:
+        raw_blocks = []
+    if not isinstance(raw_blocks, list):
+        raise ValueError("Structured material groups 'blocks' must be a list")
+    if len(raw_blocks) > 1:
+        raise ValueError("Structured material groups support a single block per export")
+
+    blocks: list[StructuredMaterialGroupBlock] = []
+    for block_index, raw_block in enumerate(raw_blocks, start=1):
+        if not isinstance(raw_block, Mapping):
+            raise ValueError(f"Structured material group block #{block_index} must be an object")
+
+        block_type = _normalize_group_text_field(raw_block.get("type"), field_name="type")
+        if block_type not in _STRUCTURED_GROUP_BLOCK_TYPES:
+            supported = ", ".join(sorted(_STRUCTURED_GROUP_BLOCK_TYPES))
+            raise ValueError(f"Unsupported structured material group type '{block_type}'; expected one of {supported}")
+
+        raw_rows = raw_block.get("rows", [])
+        if not isinstance(raw_rows, list) or not raw_rows:
+            raise ValueError(f"Structured material group block '{block_type}' must include at least one row")
+
+        rows: list[StructuredMaterialGroupRow] = []
+        for row_index, raw_row in enumerate(raw_rows, start=1):
+            if not isinstance(raw_row, Mapping):
+                raise ValueError(
+                    f"Structured material group row #{row_index} in block '{block_type}' must be an object"
+                )
+
+            ammgnm = _normalize_group_text_field(raw_row.get("ammgnm"), field_name="ammgnm")
+            material_id = _normalize_group_material_id(raw_row.get("material_id"))
+            if allowed_material_ids is not None and material_id not in allowed_material_ids:
+                raise ValueError(
+                    f"Structured material group row #{row_index} references a selected material outside the export set"
+                )
+
+            pref = _normalize_group_text_field(
+                raw_row.get("pref", ""),
+                field_name="pref",
+                allow_empty=True,
+            )
+            rows.append(
+                StructuredMaterialGroupRow(
+                    ammgnm=ammgnm,
+                    material_id=material_id,
+                    pref=pref,
+                )
+            )
+
+        blocks.append(StructuredMaterialGroupBlock(block_type=block_type, rows=rows))
+
+    return StructuredMaterialGroupRequest(blocks=blocks)
+
+
+def render_structured_material_groups(
+    request: StructuredMaterialGroupRequest,
+    assigned_ids: Mapping[str, AssignedMaterialIds],
+) -> str:
+    blocks: list[str] = []
+
+    for block in request.blocks:
+        suffix = "" if block.block_type == "3D" else f"_{block.block_type}"
+        blocks.append(f"*ALE_STRUCTURED_MULTI-MATERIAL_GROUP{suffix}\n")
+        blocks.append(_STRUCTURED_GROUP_COMMENT)
+
+        for row in block.rows:
+            material_ids = assigned_ids.get(row.material_id)
+            if material_ids is None:
+                raise ValueError(
+                    f"Structured material group row references unknown material '{row.material_id}'"
+                )
+
+            pref = row.pref or "0.0"
+            blocks.append(
+                join_fixed(
+                    [
+                        row.ammgnm,
+                        str(material_ids.mid),
+                        str(material_ids.eosid),
+                        "",
+                        "",
+                        "",
+                        "",
+                        pref,
+                    ]
+                )
+            )
+
+    return "".join(blocks)
+
+
 class MaterialStore:
     """Lightweight file-based store for materials.
 
@@ -493,36 +670,26 @@ class MaterialStore:
         )
 
 
-def export_materials(materials: Sequence[MaterialRecord]) -> str:
-    """Concatenate materials into a single .k document."""
+def build_materials_export(
+    materials: Sequence[MaterialRecord], dst_units: str | None = None
+) -> MaterialExportResult:
+    """Build exported material text and assigned identifier map."""
 
     out: List[str] = []
+    assigned_ids: dict[str, AssignedMaterialIds] = {}
 
     for idx, material in enumerate(materials, start=1):
-        text = material.to_k()
-        for spec in _identifier_specs(material):
-            id_fields = _identifier_fields(spec)
-            if id_fields:
-                text = _rewrite_identifier(text, spec, id_fields, idx)
-        out.append(text)
-
-    return "".join(out)
-
-
-def convert_materials(materials: Sequence[MaterialRecord], dst_units: str) -> str:
-    """Convert materials to dst_units and rewrite identifiers to incremental ids."""
-
-    out: List[str] = []
-
-    for idx, material in enumerate(materials, start=1):
-        models = list(material.models) if material.models else [material.model]
-        converted = convert_string(
-            material.to_k(),
-            src=material.units,
-            dst=dst_units,
-            models=models,
-        )
-        converted = converted if converted.endswith("\n") else f"{converted}\n"
+        if dst_units is None:
+            converted = material.to_k()
+        else:
+            models = list(material.models) if material.models else [material.model]
+            converted = convert_string(
+                material.to_k(),
+                src=material.units,
+                dst=dst_units,
+                models=models,
+            )
+            converted = converted if converted.endswith("\n") else f"{converted}\n"
 
         for spec in _identifier_specs(material):
             id_fields = _identifier_fields(spec)
@@ -530,8 +697,24 @@ def convert_materials(materials: Sequence[MaterialRecord], dst_units: str) -> st
                 converted = _rewrite_identifier(converted, spec, id_fields, idx)
 
         out.append(converted)
+        assigned_ids[material.material_id] = AssignedMaterialIds(
+            mid=idx,
+            eosid=idx if material.eos is not None else 0,
+        )
 
-    return "".join(out)
+    return MaterialExportResult(payload="".join(out), assigned_ids=assigned_ids)
+
+
+def export_materials(materials: Sequence[MaterialRecord]) -> str:
+    """Concatenate materials into a single .k document."""
+
+    return build_materials_export(materials).payload
+
+
+def convert_materials(materials: Sequence[MaterialRecord], dst_units: str) -> str:
+    """Convert materials to dst_units and rewrite identifiers to incremental ids."""
+
+    return build_materials_export(materials, dst_units).payload
 
 
 def _identifier_specs(material: MaterialRecord) -> List[KeywordSpec]:
