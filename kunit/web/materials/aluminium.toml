@@ -1,0 +1,32 @@
+[[materials]]
+id = "al-amg45"
+name = { ru = "Алюминий АМг4.5", en = "Aluminium AMg4.5 (Al-5083)" }
+reference = "https://example.com/hexolite"
+comment = { ru = "Алюминий АМг4.5 (аналог зарубежного Al-5083)", en = "Aluminium AMg4.5 (Al-5083)" }
+tags = { ru = ["алюминий", "кумулятивная облицовка", "корпус"], en = ["aluminium", "shaped charge liner", "cases"] }
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+MAT_AL5083
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        45     2.680      27.0       0.0       0.0       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+     0.270     0.470      0.60    0.0105       1.2     993.0     293.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+8.75000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5c2/p/xnp/d      erod     efmin    numint         k      eps1
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+EOS_AL5083
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        45     3.075     1.590       0.0       0.0      1.29       0.0       0.0
+$#      v0    unused      lcid
+       0.0                   0
+"""
