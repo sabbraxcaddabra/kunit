@@ -1,0 +1,32 @@
+[[materials]]
+id = "tungsten"
+name = { ru = "ВНЖ-90", en = "WNiFe90" }
+reference = "https://example.com/hexolite"
+comment = { ru = "Сплав ВНЖ-90", en = "WNiFe90 alloy" }
+tags = { ru = ["вольфрам", "поражающие элементы", "ударник"], en = ["tungsten", "fragments", "impactor"] }
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+MAT_tungsten_alloy
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        46     17.00     160.0       0.0       0.0       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+     1.506     0.177      0.12    0.0160       1.0    1723.0     293.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+1.29000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5c2/p/xnp/d      erod     efmin    numint         k      eps1
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+EOS_tungsten_alloy
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        46     4.029     1.237       0.0       0.0      1.54       0.0       0.0
+$#      v0    unused      lcid
+       0.0                   0
+"""
