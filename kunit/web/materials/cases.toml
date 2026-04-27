@@ -35,8 +35,8 @@ $#      v0    unused      lcid
 id = "steel-aisi-1045(jc)"
 name = { ru = "Сталь AISI-1045", en = "Steel AISI-1045" }
 reference = "https://example.com/hexolite"
-comment = { ru = "Сталь Сталь AISI-1045 (аналог стали 45)", en = "Steel AISI-1045" }
-tags = { ru = ["медь", "корпус"], en = ["copper", "cases"] }
+comment = { ru = "Сталь AISI-1045 (аналог стали 45)", en = "Steel AISI-1045" }
+tags = { ru = ["сталь", "корпус"], en = ["steel", "cases"] }
 
 [materials.material]
 model = "mat-jc"
@@ -59,8 +59,40 @@ units = "mm-mg-us"
 payload = """*EOS_GRUNEISEN_TITLE
 EOS_St_1045
 $#   eosid         c        s1        s2        s3    gamma0         a        e0
-        36     4.569      1.49       0.0       0.0      2.17       0.0       0.0
+        46     4.569      1.49       0.0       0.0      2.17       0.0       0.0
 $#      v0    unused      lcid
        0.0                   0
 """
 
+[[materials]]
+id = "steel-15ua(jc)"
+name = { ru = "Сталь 15ЮА", en = "Steel 15UA" }
+reference = "https://example.com/hexolite"
+comment = { ru = "Сталь 15ЮА", en = "Steel 15UA" }
+tags = { ru = ["сталь", "корпус", "облицовка"], en = ["steel", "cases", "liner"] }
+
+[materials.material]
+model = "mat-jc"
+units = "mm-mg-us"
+payload = """*MAT_JOHNSON_COOK_TITLE
+MAT_St_15UA
+$#     mid        ro         g         e        pr       dtf        vp    rateop
+        47      7.85      78.0       0.0       0.0       0.0       0.0       0.0
+$#       a         b         n         c         m        tm        tr      epso
+     0.300       0.5     0.400     0.017       1.0    1733.0     293.01.00000E-6
+$#      cp        pc     spall        it        d1        d2        d3        d4
+4.52000E-4       0.0       2.0       0.0       0.0       0.0       0.0       0.0
+$#      d5c2/p/xnp/d      erod     efmin    numint         k      eps1
+       0.0       0.0       0.01.00000E-6       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us"
+payload = """*EOS_GRUNEISEN_TITLE
+EOS_St_15UA
+$#   eosid         c        s1        s2        s3    gamma0         a        e0
+        47     4.570      1.49       0.0       0.0      1.93       0.0       0.0
+$#      v0    unused      lcid
+       0.0                   0
+"""
