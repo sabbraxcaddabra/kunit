@@ -1,5 +1,16 @@
 # syntax=docker/dockerfile:1
 
+FROM node:22-slim AS web-assets
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY kunit/web/templates ./kunit/web/templates
+COPY kunit/web/assets ./kunit/web/assets
+RUN npm run build:css
+
 FROM python:3.12-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -27,6 +38,7 @@ RUN uv sync --no-dev --frozen --no-install-project
 
 # Copy application source and config
 COPY kunit ./kunit
+COPY --from=web-assets /app/kunit/web/static/css/app.css ./kunit/web/static/css/app.css
 COPY gunicorn.conf.py ./gunicorn.conf.py
 COPY AGENTS.md ./AGENTS.md
 

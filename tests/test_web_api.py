@@ -3,12 +3,16 @@ from __future__ import annotations
 import html
 import json
 import re
+from pathlib import Path
 
 from werkzeug.datastructures import MultiDict
 
 from kunit.core.fixed import format_lsdyna_10, join_fixed
 from kunit.materials_store import MaterialRecord, MaterialSection
 from kunit.web.app import create_app
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def _client():
@@ -19,6 +23,74 @@ def _client():
 
 def _fixed_line(values):
     return join_fixed([format_lsdyna_10(v) for v in values])
+
+
+def test_tailwind_pipeline_has_npm_build_script():
+    package_json = PROJECT_ROOT / "package.json"
+
+    data = json.loads(package_json.read_text(encoding="utf-8"))
+
+    assert data["scripts"]["build:css"] == (
+        "tailwindcss -i ./kunit/web/assets/css/tailwind.css "
+        "-o ./kunit/web/static/css/app.css --minify"
+    )
+    assert data["scripts"]["watch:css"] == (
+        "tailwindcss -i ./kunit/web/assets/css/tailwind.css "
+        "-o ./kunit/web/static/css/app.css --watch"
+    )
+    assert "@tailwindcss/cli" in data["devDependencies"]
+    assert "tailwindcss" in data["devDependencies"]
+
+
+def test_tailwind_source_scans_jinja_templates():
+    source = (PROJECT_ROOT / "kunit/web/assets/css/tailwind.css").read_text(
+        encoding="utf-8"
+    )
+
+    assert '@import "tailwindcss";' in source
+    assert '@source "../../templates";' in source
+
+
+def test_web_pages_use_local_stylesheet_instead_of_tailwind_cdn():
+    client = _client()
+    text = (
+        "*MAT_JOHNSON_COOK\n"
+        "$#     mid        ro         e        pr\n"
+        "        1       7.8   210000.0      0.29\n"
+    )
+
+    responses = [
+        client.get("/"),
+        client.get("/materials"),
+        client.post(
+            "/convert",
+            data={
+                "text_input": text,
+                "src": "mm-mg-us",
+                "dst": "m-kg-s",
+                "models": ["mat-jc"],
+                "out_name": "converted.k",
+            },
+        ),
+    ]
+
+    for resp in responses:
+        assert resp.status_code == 200
+        body = resp.get_data(as_text=True)
+        assert "cdn.tailwindcss.com" not in body
+        assert 'href="/static/css/app.css"' in body
+
+
+def test_local_stylesheet_is_served():
+    client = _client()
+
+    resp = client.get("/static/css/app.css")
+
+    assert resp.status_code == 200
+    assert "text/css" in resp.content_type
+    css = resp.get_data(as_text=True)
+    assert "tailwindcss v" in css
+    assert ".bg-slate-50" in css
 
 
 def test_api_list_materials_returns_records():

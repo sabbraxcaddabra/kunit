@@ -31,6 +31,8 @@ build-backend = "hatchling.build"
 packages = ["kunit"]
 include = [
     "kunit/web/templates/*.html",
+    "kunit/web/assets/**/*.css",
+    "kunit/web/static/**/*.css",
     "kunit/web/materials/*.toml",
     "kunit/web/translations/**",
 ]
