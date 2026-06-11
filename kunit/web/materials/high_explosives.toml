@@ -298,3 +298,28 @@ $#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
 $#   grow2       ar2       es2        en     fmxgr     fmngr
       30.0     0.667     0.667       1.0       0.8       0.8
 """
+
+[[materials]]
+id = "lx-14"
+name = { ru = "Окфол 3.5", en = "LX-14" }
+reference = "https://"
+comment = { ru = "Взрывчатое вещество LX-14, аналог отечественного Окфол 3.5", en = "LX-14" }
+tags = { ru = ["взрывчатое вещество", "окфол 3.5"], en = ["high explosive", "LX-14"] }
+
+[materials.material]
+model = "mat-he-burn"
+units = "mm-mg-us-GPa"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+MAT_LX-14
+$#     mid        ro         d       pcj      beta         k         g      sigy
+       103     1.835       8.8      37.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-gruneisen"
+units = "mm-mg-us-GPa"
+payload = """*EOS_JWL_TITLE
+EOS_LX-14
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+       203     826.1     17.24      4.55      1.32      0.38      10.2       1.0
+"""""
