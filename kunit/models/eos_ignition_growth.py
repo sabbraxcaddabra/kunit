@@ -10,21 +10,22 @@ CARDS = [
 ]
 
 DIMS = {
-    # pressures (e.g., GPa)
+    # Pressure or energy per reference volume (e.g. GPa).
     "a": (1, -1, -2),
     "b": (1, -1, -2),
     "r1": (1, -1, -2),
     "r2": (1, -1, -2),
+    # Volumetric heat capacity has units pressure/K; Kelvin is unchanged.
     "cvp": (1, -1, -2),
-    "cvr": (1, -2, -2),
-    # specific heat (energy per unit volume)
+    "cvr": (1, -1, -2),
+    # Omega times volumetric heat capacity: pressure/K.
     "g": (1, -1, -2),
     "r3": (1, -1, -2),
     # rates / frequencies (1/time)
     "freq": (0, 0, -1),
     "grow1": (0, 0, -1),
     "grow2": (0, 0, -1),
-    "enq": (1, -1, -2),
+    "enq": (1, -1, -2),  # reaction energy per reference volume
 }
 
 TRANSFORMS = {

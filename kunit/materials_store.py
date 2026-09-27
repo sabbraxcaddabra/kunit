@@ -15,6 +15,7 @@ from kunit.core.engine import KeywordSpec
 from kunit.core.fixed import format_lsdyna_10, join_fixed, split_fixed
 from kunit.core.units import BASE_SYSTEMS
 from kunit.models import ALL_SPECS, SPECS_BY_NAME
+from kunit.lee_tarver import SETS as LEE_TARVER_SETS, render_eos
 
 
 def _extract_models_from_payload(payload: str) -> List[str]:
@@ -551,7 +552,20 @@ class MaterialStore:
                 f"Unknown units '{units}' for section '{kind}' in {source_path}; known: {list(BASE_SYSTEMS)}"
             )
 
-        payload = raw.get("payload") or raw.get("text") or ""
+        source_id = raw.get("source_id")
+        if source_id is not None:
+            if (
+                model != "eos-ignition-growth"
+                or not isinstance(source_id, str)
+                or source_id not in LEE_TARVER_SETS
+            ):
+                raise ValueError(f"Unknown Lee-Tarver source '{source_id}' in {source_path}")
+            source = LEE_TARVER_SETS[source_id]
+            if units != source.units:
+                raise ValueError(f"Source '{source_id}' requires units '{source.units}'")
+            payload = render_eos(source)
+        else:
+            payload = raw.get("payload") or raw.get("text") or ""
         if not isinstance(payload, str) or not payload.strip():
             raise ValueError(
                 f"Section '{kind}' in {source_path} must include payload text"
@@ -607,6 +621,23 @@ class MaterialStore:
                 sections.append(
                     self._normalize_section(section_data, section_name, source_path)
                 )
+
+        eos_raw = raw.get("eos")
+        source_id = eos_raw.get("source_id") if isinstance(eos_raw, Mapping) else None
+        if source_id in LEE_TARVER_SETS:
+            source = LEE_TARVER_SETS[source_id]
+            if source_id != material_id:
+                raise ValueError(f"Lee-Tarver source '{source_id}' does not match material '{material_id}'")
+            material_raw = raw.get("material")
+            if source.rho0 is not None and isinstance(material_raw, Mapping):
+                payload = str(material_raw.get("payload", ""))
+                data_lines = engine._extract_data_lines(payload.splitlines(), 1)
+                if not data_lines:
+                    raise ValueError(f"Missing MAT density for '{material_id}'")
+                rho = float(split_fixed(payload.splitlines()[data_lines[0]])[1])
+                if abs(rho - source.rho0) > 1e-6:
+                    density_kind = "calibration" if source.source_url else "legacy card"
+                    raise ValueError(f"'{material_id}' MAT density {rho} differs from Lee-Tarver {density_kind} {source.rho0}")
 
         if not sections:
             section = self._normalize_section(
@@ -736,9 +767,9 @@ def _identifier_specs(material: MaterialRecord) -> List[KeywordSpec]:
 def _identifier_fields(spec: KeywordSpec) -> set[str]:
     id_fields: set[str] = set()
     for card in spec.cards:
-        for field in card:
-            if field in {"mid", "eosid"}:
-                id_fields.add(field)
+        for name in card:
+            if name in {"mid", "eosid"}:
+                id_fields.add(name)
     return id_fields
 
 

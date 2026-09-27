@@ -50,10 +50,13 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 
 [[materials]]
 id = "comp_a3"
-name = { ru = "Comp A-3 (А-IX-1)", en = "Comp A-3 (A-IX-1)" }
-reference = "https://example.com/hexolite"
-comment = { ru = "Взрывчатое вещество Comp A-3, аналог отечественного А-IX-1", en = "Explosive Comp A-3, equivalent of A-IX-1" }
-tags = { ru = ["взрывчатка", "comp a-3", "a-ix-1"], en = ["explosive", "comp a-3"] }
+name = { ru = "Comp A-3", en = "Comp A-3" }
+references = [
+    { url = "https://www.osti.gov/servlets/purl/1163261", kind = "report", note = { ru = "LANL, LA-UR-14-24860: RDX и полиэтиленовый воск; численные параметры JWL не приведены", en = "LANL LA-UR-14-24860: RDX and polyethylene wax; no numerical JWL parameters" } },
+    { url = "https://ntrs.nasa.gov/api/citations/19740015362/downloads/19740015362.pdf?attachment=true", kind = "report", note = { ru = "NASA: 91 % RDX и 9 % воска; без подтверждения JWL-карты", en = "NASA: 91% RDX and 9% wax; does not verify this JWL card" } },
+]
+comment = { ru = "Флегматизированный RDX, 91 % RDX и 9 % воска; существующая JWL-карта только для заданной детонации. Источник её численных коэффициентов не установлен; эквивалентность А-IX-1 не подтверждена.", en = "Phlegmatized RDX, 91% RDX and 9% wax; legacy JWL card for prescribed detonation only. Numerical coefficients are untraced; equivalence to A-IX-1 is unverified." }
+tags = { ru = ["взрывчатка", "comp a-3"], en = ["explosive", "comp a-3"] }
 
 [materials.material]
 model = "mat-he-burn"
@@ -76,10 +79,12 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 [[materials]]
 id = "comp_b"
 name = { ru = "Comp B (ТГ-40)", en = "Comp B" }
-reference = "https://example.com/hexolite"
-comment = { ru = "Взрывчатое вещество Comp A-3, аналог отечественного ТГ-40", en = "Explosive Comp B" }
+reference = ""
+comment = { ru = "Историческая JWL-карта при ρ₀=1,717 г/см³; первичный источник точного набора не установлен", en = "Legacy JWL card at 1.717 g/cm3; the exact parameter set has no verified primary source" }
 tags = { ru = ["взрывчатка", "comp b", "тг-40"], en = ["explosive", "comp b"] }
 
+# Pre-audit kunit card, cm-g-us and Mbar. Murphy et al. (1993), Table 1
+# describes a separate 1.712 g/cm3 LANL calibration, not this exact tuple.
 [materials.material]
 model = "mat-he-burn"
 units = "cm-g-us"
@@ -98,9 +103,30 @@ comp b
 """
 
 [[materials]]
+id = "comp-b-lanl(i&g)"
+name = { ru = "LANL Comp B (кинетика Ли–Тарвера)", en = "LANL Comp B (Lee–Tarver kinetics)" }
+reference = "https://www.osti.gov/servlets/purl/10175213"
+comment = { ru = "EOS и двухчленная кинетика из столбца LANL Comp B, таблица 1 Murphy et al. (1993), ρ₀=1,712 г/см³", en = "EOS and two-term rates from Murphy et al. (1993), Table 1, LANL Comp B column, 1.712 g/cm3" }
+tags = { ru = ["взрывчатка", "comp b"], en = ["explosive", "comp b"] }
+
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+LANL Comp B
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+      1114     1.712       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+source_id = "comp-b-lanl(i&g)"
+
+[[materials]]
 id = "tnt(i&g)"
 name = { ru = "Тротил (модель кинетики Ли-Тарвера)", en = "TNT (Lee-Tarver kinetics model)" }
-reference = "https://example.com/hexolite"
+reference = "https://www.foi.se/rest-api/report/FOI-R--0151--SE"
 comment = { ru = "Взрывчатое вещество тротил", en = "Explosive TNT" }
 tags = { ru = ["взрывчатка", "тротил"], en = ["explosive", "tnt"] }
 
@@ -110,23 +136,13 @@ units = "cm-g-us"
 payload = """*MAT_NULL_TITLE
 tnt
 $#     mid        ro        pc        mu     terod     cerod        ym        pr
-        11      1.63       0.0       0.0       0.0       0.0       0.0       0.0
+        11      1.61       0.0       0.0       0.0       0.0       0.0       0.0
 """
 
 [materials.eos]
 model = "eos-ignition-growth"
 units = "cm-g-us"
-payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
-tnt
-$#   eosid         a         b       xp1       xp2      frer         g        r1
-        11     3.712  0.032306      4.15      0.95     0.2223.00000E-6     17.98
-$#      r2        r3        r5        r6     fmxig      freq     grow1        em
-    -0.9311.22653E-5       6.2       3.1       1.0      50.0       0.0       0.0
-$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
-       0.0       0.01.00000E-52.17200E-5       4.0       0.0      0.07     288.0
-$#   grow2       ar2       es2        en     fmxgr     fmngr
-      40.0     0.667     0.222       1.2       1.0       0.0
-"""
+source_id = "tnt(i&g)"
 
 [[materials]]
 id = "rdx"
@@ -154,9 +170,76 @@ $#   eosid         a         b        r1        r2      omeg        e0        vo
 """
 
 [[materials]]
+id = "rdx-8701"
+name = { ru = "RDX 8701", en = "RDX 8701" }
+references = [
+    { url = "https://www.sciengine.com/parse/pdf/2096-2304/B0290F3EBF5E4846B7046AB9E2778AD4.pdf", kind = "paper", note = { ru = "Zhu et al. (2022), таблица 2: все численные параметры карты", en = "Zhu et al. (2022), Table 2: all numerical card values" } },
+    { url = "https://www.mdpi.com/1996-1944/15/1/344", kind = "paper", note = { ru = "Li et al. (2022): употребление названий JH-2 и 8701", en = "Li et al. (2022): JH-2 and 8701 naming" } },
+]
+comment = { ru = "8701/JH-2, JWL продуктов при ρ₀=1,667 г/см³ по таблице 2 Zhu et al. (2022); кинетика для этой плотности не подтверждена", en = "8701/JH-2 product JWL at 1.667 g/cm3 from Zhu et al. (2022), Table 2; kinetics at this density is unverified" }
+tags = { ru = ["взрывчатка", "rdx 8701", "jh-2"], en = ["explosive", "rdx 8701", "jh-2"] }
+
+# Zhu et al. (2022), Table 2: rho 1.667 g/cm3, D 8425 m/s,
+# PCJ 29.66 GPa, A 612.5 GPa, B 13.95 GPa, E0 9 GJ/m3.
+# Converted here to cm-g-us: D 0.8425 cm/us, pressure/energy density in Mbar.
+[materials.material]
+model = "mat-he-burn"
+units = "cm-g-us"
+payload = """*MAT_HIGH_EXPLOSIVE_BURN_TITLE
+RDX 8701
+$#     mid        ro         d       pcj      beta         k         g      sigy
+      1111     1.667    0.8425    0.2966       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-jwl"
+units = "cm-g-us"
+payload = """*EOS_JWL_TITLE
+RDX 8701
+$#   eosid         a         b        r1        r2      omeg        e0        vo
+      1111     6.125    0.1395       4.5       1.4      0.25      0.09       0.0
+"""
+
+[[materials]]
+id = "jh-2(i&g)"
+name = { ru = "JH-2 (экспериментальная Ignition and Growth)", en = "JH-2 (experimental Ignition and Growth)" }
+references = [
+    { url = "https://www.sciengine.com/parse/pdf/2096-2304/B0290F3EBF5E4846B7046AB9E2778AD4.pdf", kind = "paper", note = { ru = "Zhu et al. (2022), табл. 2: продуктовая EOS и ENQ для 8701 при 1,667 г/см³", en = "Zhu et al. (2022), Table 2: product EOS and ENQ for 8701 at 1.667 g/cm3" } },
+    { url = "https://doi.org/10.1016/j.dt.2019.04.007", kind = "paper", note = { ru = "Hong et al. (2020), табл. 1–3: исходный AUTODYN-набор 8701, включая R2=+0,0328 Mbar; CVP/CVR не приведены", en = "Hong et al. (2020), Tables 1–3: original AUTODYN 8701 set, including R2=+0.0328 Mbar; CVP/CVR absent" } },
+    { url = "https://www.researchgate.net/publication/381763413_Application_of_Lee-Tarver_Model_for_Energetic_Materials_Safety_Assessment_Utilized_in_Aerospace_Applications", doi = "10.3390/aerospace11070513", kind = "paper", note = { ru = "Awan et al., Aerospace (2024): табл. 4 и 5 для реагента и кинетики мишени JH-2; табл. 2 — JWL заряда-источника, не полная продуктовая ветвь I&G мишени", en = "Awan et al., Aerospace (2024): Tables 4 and 5 for the JH-2 target reactant and rates; Table 2 is JWL for the threat shaped charge, not the target I&G product branch" } },
+    { url = "https://wydawnictwa.ipo.lukasiewicz.gov.pl/wp-content/uploads/2024/11/CEJEM-1327-v0-Huang.pdf", kind = "paper", note = { ru = "Awan et al. (2024), табл. 2–3: EOS реагента и кинетика JH-2 при 1,717 г/см³; R2=+0,0328 Mbar", en = "Awan et al. (2024), Tables 2-3: unreacted EOS and rates at 1.717 g/cm3; R2=+0.0328 Mbar" } },
+    { url = "https://www.osti.gov/servlets/purl/1498045", kind = "paper", note = { ru = "Cawkwell et al. (2016), с. 4: Cᵥ=217,1 Дж/(моль·К) для чистого α-RDX при 300 К; лишь оценка CVR для JH-2", en = "Cawkwell et al. (2016), p. 4: Cv=217.1 J/(mol K) for pure alpha-RDX at 300 K; only a CVR proxy for JH-2" } },
+    { url = "https://webbook.nist.gov/cgi/cbook.cgi?Name=RDX", kind = "datasheet", note = { ru = "NIST: молярная масса RDX 222,1163 г/моль для пересчёта CVR", en = "NIST: RDX molar mass 222.1163 g/mol for CVR conversion" } },
+]
+comment = { ru = "SOURCE_CONFLICT: составная экспериментальная I&G-карта. R2=+0,0328 Mbar из Hong/Awan; CVR рассчитана по чистому RDX при 300 К и не откалибрована для JH-2. CVP оставлена из прежней карты без источника. Продукты и ENQ взяты при 1,667 г/см³, реагент и кинетика при 1,717 г/см³. Начальное давление при 298 К ≈+1,89 ГПа. Не использовать как проверенную карту инициирования.", en = "SOURCE_CONFLICT: experimental composite I&G card. R2=+0.0328 Mbar from Hong/Awan; CVR is a pure-RDX 300 K estimate, not calibrated for JH-2. CVP retains an untraced legacy value. Products and ENQ use 1.667 g/cm3, reactant and rates 1.717 g/cm3. Initial pressure at 298 K is about +1.89 GPa. Not a validated initiation card." }
+tags = { ru = ["взрывчатка", "jh-2", "8701", "неподтверждено"], en = ["explosive", "jh-2", "8701", "unverified"] }
+
+# Original pre-audit JH-2 card: MAT RO=1.72 g/cm3, revised to the 1.717 g/cm3
+# unreacted EOS/kinetics density reported by Awan et al. (2024), Tables 2-3.
+# Product EOS and ENQ remain Zhu et al. (2022) values at 1.667 g/cm3.
+# Hong et al. (2020), Tables 1-3 (DOI above), confirms positive reactant R2
+# but gives no CVP/CVR. CVR uses the pure-RDX estimate in Cawkwell et al.
+# (2016), p. 4, converted with NIST molar mass; CVP remains untraced.
+# No complete same-density calibration has been found: see
+# docs/lee_tarver/jh-2.md and docs/lee_tarver/source_search.md.
+[materials.material]
+model = "mat-null"
+units = "cm-g-us"
+payload = """*MAT_NULL_TITLE
+jh2
+$#     mid        ro        pc        mu     terod     cerod        ym        pr
+      1111     1.717       0.0       0.0       0.0       0.0       0.0       0.0
+"""
+
+[materials.eos]
+model = "eos-ignition-growth"
+units = "cm-g-us"
+source_id = "jh-2(i&g)"
+
+[[materials]]
 id = "pbx-9501(i&g)"
 name = { ru = "PBX 9501 (модель кинетики Ли-Тарвера)", en = "PBX 9501 (Lee-Tarver kinetics model)" }
-reference = ""
+reference = "https://digital.library.unt.edu/ark:/67531/metadc1407555/"
 comment = { ru = "Взрывчатое вещество пластит", en = "Explosive PBX 9501" }
 tags = { ru = ["взрывчатка", "пластит"], en = ["explosive", "pbx 9501"] }
 
@@ -166,81 +249,39 @@ units = "cm-g-us"
 payload = """*MAT_NULL_TITLE
 pbx 9501
 $#     mid        ro        pc        mu     terod     cerod        ym        pr
-        91       1.8       0.0       0.0       0.0       0.0       0.0       0.0
+        91     1.838       0.0       0.0       0.0       0.0       0.0       0.0
 """
 
 [materials.eos]
 model = "eos-ignition-growth"
 units = "cm-g-us"
-payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
-pbx 9501
-$#   eosid         a         b       xp1       xp2      frer         g        r1
-        91    16.689    0.5969       5.9       2.1     0.6674.50000E-6    7320.0
-$#      r2        r3        r5        r6     fmxig      freq     grow1        em
- -0.0526542.46560E-5      14.1      1.41       0.31.40000E11     130.0       2.0
-$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
-     0.227     0.6671.00000E-52.78060E-5      20.0       0.0     0.095     288.0
-$#   grow2       ar2       es2        en     fmxgr     fmngr
-     400.0       1.0     0.333       2.0       0.5       0.5
-"""
+source_id = "pbx-9501(i&g)"
 
 [[materials]]
-id = "pbxn-109(i&g)"
-name = { ru = "PBXN-109 (модель кинетики Ли-Тарвера)", en = "PBXN-109 (Lee-Tarver kinetics model)" }
-reference = ""
-comment = { ru = "Взрывчатое вещество PBXN-109", en = "Explosive PBXN-109" }
-tags = { ru = ["взрывчатка", "pbxn-109"], en = ["explosive", "pbxn-109"] }
-
-[materials.eos]
-model = "eos-ignition-growth"
-units = "cm-g-us"
-payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
-PBXN-109
-$#   eosid         a         b       xp1       xp2      frer         g        r1
-        92    13.413    0.0327       6.0       2.0    0.66672.00000E-6    8817.0
-$#      r2        r3        r5        r6     fmxig      freq     grow1        em
-   -0.03551.94000E-5      15.0      1.41      0.22    6700.0     403.5       2.0
-$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
-    0.6667     0.2221.00000E-52.50000E-5       9.0      0.02     0.102     298.0
-$#   grow2       ar2       es2        en     fmxgr     fmngr
-     230.0       1.0     0.333       3.0       0.5       0.0
-"""
-
-[[materials]]
-id = "jh-2(i&g)"
-name = { ru = "JH-2 (модель кинетики Ли-Тарвера)", en = "JH-2 (Lee-Tarver kinetics model)" }
-reference = ""
-comment = { ru = "Взрывчатое вещество JH-2, аналог отечественного А-IX-1", en = "Explosive JH-2, equivalent of A-IX-1" }
-tags = { ru = ["взрывчатка", "jh-2"], en = ["explosive", "jh-2"] }
+id = "pbx-9404(i&g)"
+name = { ru = "PBX 9404 (кинетика Ли–Тарвера)", en = "PBX 9404 (Lee–Tarver kinetics)" }
+reference = "https://www.osti.gov/servlets/purl/10175213"
+comment = { ru = "EOS и двухчленная кинетика из столбца PBX-9404, таблица 1 Murphy et al. (1993), ρ₀=1,842 г/см³", en = "EOS and two-term rates from Murphy et al. (1993), Table 1, PBX-9404 column, 1.842 g/cm3" }
+tags = { ru = ["взрывчатка", "pbx 9404"], en = ["explosive", "pbx 9404"] }
 
 [materials.material]
 model = "mat-null"
 units = "cm-g-us"
 payload = """*MAT_NULL_TITLE
-jh2
+PBX 9404
 $#     mid        ro        pc        mu     terod     cerod        ym        pr
-      1111      1.72       0.0       0.0       0.0       0.0       0.0       0.0
+      1115     1.842       0.0       0.0       0.0       0.0       0.0       0.0
 """
 
 [materials.eos]
 model = "eos-ignition-growth"
 units = "cm-g-us"
-payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
-jh2
-$#   eosid         a         b       xp1       xp2      frer         g        r1
-      1111     6.125    0.1395       4.5       1.4     0.6672.50000E-6     310.0
-$#      r2        r3        r5        r6     fmxig      freq     grow1        em
- -0.0327852.22000E-5      11.3      1.13     0.022   4000000     140.0       2.0
-$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
-     0.329     0.6671.00000E-52.48700E-5       7.0     0.022      0.09     298.0
-$#   grow2       ar2       es2        en     fmxgr     fmngr
-    1000.0     0.333     0.067       3.0       1.0       0.0
-"""
+source_id = "pbx-9404(i&g)"
 
 [[materials]]
 id = "ultrafine-tatb(i&g)"
 name = { ru = "Ultrafine TATB (модель кинетики Ли-Тарвера)", en = "Ultrafine TATB (Lee-Tarver kinetics model)" }
-reference = ""
+reference = "https://www.osti.gov/servlets/purl/15016041"
 comment = { ru = "Взрывчатое вещество мелкодисперсный ТАТБ", en = "Explosive ultrafine TATB" }
 tags = { ru = ["взрывчатка", "татб"], en = ["explosive", "tatb"] }
 
@@ -256,22 +297,12 @@ $#     mid        ro        pc        mu     terod     cerod        ym        pr
 [materials.eos]
 model = "eos-ignition-growth"
 units = "cm-g-us"
-payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
-ultrafine tatb
-$#   eosid         a         b       xp1       xp2      frer         g        r1
-      1112  12.05026  0.602513       6.2       2.2     0.6675.00000E-6    632.07
-$#      r2        r3        r5        r6     fmxig      freq     grow1        em
-  -0.044722.22000E-5      11.3      1.13     0.071   4000000    2200.0       2.0
-$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
-     0.667       1.01.00000E-52.48700E-5       7.0      0.22     0.069     298.0
-$#   grow2       ar2       es2        en     fmxgr     fmngr
-      60.0     0.667     0.667       1.0       1.0       0.8
-"""
+source_id = "ultrafine-tatb(i&g)"
 
 [[materials]]
 id = "lx-17(i&g)"
 name = { ru = "LX-17 (модель кинетики Ли-Тарвера)", en = "LX-17 (Lee-Tarver kinetics model)" }
-reference = ""
+reference = "https://www.osti.gov/servlets/purl/15016041"
 comment = { ru = "Взрывчатое вещество композит LX-17", en = "Explosive LX-17 composite" }
 tags = { ru = ["взрывчатка", "композит на основе татб", "lx17"], en = ["explosive", "tatb-based composite", "lx-17"] }
 
@@ -287,17 +318,7 @@ $#     mid        ro        pc        mu     terod     cerod        ym        pr
 [materials.eos]
 model = "eos-ignition-growth"
 units = "cm-g-us"
-payload = """*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE
-lx17
-$#   eosid         a         b       xp1       xp2      frer         g        r1
-      1113   14.8105    0.6379       6.2       2.2     0.6675.00000E-6     778.1
-$#      r2        r3        r5        r6     fmxig      freq     grow1        em
-  -0.050312.22000E-5      11.3      1.13      0.02   4000000    4600.0       3.0
-$#     ar1       es1       cvp       cvr     eetal     ccrit       enq      tmp0
-     0.667       1.01.00000E-52.48700E-5       7.0      0.22     0.069     298.0
-$#   grow2       ar2       es2        en     fmxgr     fmngr
-      30.0     0.667     0.667       1.0       0.8       0.8
-"""
+source_id = "lx-17(i&g)"
 
 [[materials]]
 id = "lx-14"
