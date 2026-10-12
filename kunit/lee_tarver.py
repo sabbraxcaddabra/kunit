@@ -312,9 +312,10 @@ def render_eos(source: LeeTarverSet) -> str:
     values = card_fields(source)
     lines = ["*EOS_IGNITION_AND_GROWTH_OF_REACTION_IN_HE_TITLE\n", f"{source.title}\n"]
     for row in CARDS:
+        # The comment marker occupies two columns of the first 10-character field.
         lines.append(
             "$#"
-            + "".join(f"{name if name != '_' else '':>10}" for name in row).rstrip()
+            + join_fixed([name if name != "_" else "" for name in row])[2:].rstrip()
             + "\n"
         )
         lines.append(

@@ -11,6 +11,7 @@ from kunit.core.units import BASE_SYSTEMS, scale_factor
 from kunit.lee_tarver import SETS, adiabatic_bulk, audit_set, render_eos
 from kunit.materials_store import MaterialStore
 from kunit.lee_tarver_report import CORRECTIONS, render_report, render_summary, plot_svg
+from kunit.models.eos_ignition_growth import CARDS
 
 
 ROOT = Path(__file__).resolve().parents[1] / "kunit/web/materials"
@@ -280,6 +281,21 @@ class LeeTarverAuditTests(unittest.TestCase):
             )
             with self.assertRaisesRegex(ValueError, "Unknown Lee-Tarver source"):
                 MaterialStore(directory).list_materials()
+
+    def test_eos_headers_align_with_numeric_field_columns(self):
+        for source in SETS.values():
+            lines = render_eos(source).splitlines()
+            for header, data, fields in zip(lines[2::2], lines[3::2], CARDS):
+                with self.subTest(material=source.material_id, header=header):
+                    self.assertLessEqual(len(header), 80)
+                    self.assertEqual(len(data), 80)
+                    labels = split_fixed(header)
+                    self.assertTrue(labels[0].startswith("$#"))
+                    labels[0] = labels[0][2:]
+                    self.assertEqual(
+                        [label.strip() for label in labels],
+                        [name if name != "_" else "" for name in fields],
+                    )
 
     def test_reference_cards(self):
         expected = (
